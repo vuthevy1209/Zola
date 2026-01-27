@@ -147,13 +147,13 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     forgotPasswordText: {
-        color: '#007AFF', // Example primary color
+        color: '#16A34A', // Example primary color
         fontSize: 14,
         fontWeight: '600',
     },
     button: {
         height: 50,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#16A34A',
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
@@ -175,6 +175,6 @@ const styles = StyleSheet.create({
     linkText: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: '#16A34A',
     },
 });

@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     },
     button: {
         height: 50,
-        backgroundColor: '#007AFF', // Primary color
+        backgroundColor: '#16A34A', // Primary color
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
@@ -196,6 +196,6 @@ const styles = StyleSheet.create({
     linkText: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: '#16A34A',
     },
 });

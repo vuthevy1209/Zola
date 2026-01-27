@@ -5,46 +5,51 @@ import 'react-native-reanimated';
 import { useEffect, useState } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+    anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const router = useRouter();
-  const segments = useSegments();
-  const navigationState = useRootNavigationState();
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
+    const colorScheme = useColorScheme();
+    const router = useRouter();
+    const segments = useSegments();
+    const navigationState = useRootNavigationState();
+    const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
 
-  useEffect(() => {
-    if (!navigationState?.key) return;
+    useEffect(() => {
+        if (!navigationState?.key) return;
+    }, [navigationState?.key]);
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const MyDarkTheme = {
+        ...DarkTheme,
+        colors: {
+            ...DarkTheme.colors,
+            primary: Colors.dark.tint,
+            background: Colors.dark.background,
+            text: Colors.dark.text,
+        },
+    };
 
-    // Slight delay or check to ensure we are ready to navigate
-    const timer = setTimeout(() => {
-      if (!isAuthenticated && !inAuthGroup) {
-        // Redirect to the login page if not authenticated and not already in the auth group
-        router.replace('/(auth)/login');
-      } else if (isAuthenticated && inAuthGroup) {
-        // Redirect to the tabs page if authenticated and in the auth group
-        router.replace('/(tabs)');
-      }
-    }, 1);
+    const MyLightTheme = {
+        ...DefaultTheme,
+        colors: {
+            ...DefaultTheme.colors,
+            primary: Colors.light.tint,
+            background: Colors.light.background,
+            text: Colors.light.text,
+        },
+    };
 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, segments, navigationState?.key]);
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    return (
+        <ThemeProvider value={colorScheme === 'dark' ? MyDarkTheme : MyLightTheme}>
+            <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
+        </ThemeProvider>
+    );
 }
 
