@@ -66,6 +66,17 @@ export default function LoginScreen() {
                         <Text style={styles.buttonText}>Login</Text>
                     </TouchableOpacity>
 
+                    <View style={styles.dividerContainer}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>Or</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+
+                    <TouchableOpacity style={[styles.button, styles.googleButton]} onPress={() => console.log('Google Sign In')}>
+                        <Ionicons name="logo-google" size={20} color="#1f1d1cff" style={styles.googleIcon} />
+                        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                    </TouchableOpacity>
+
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Don't have an account? </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
@@ -164,17 +175,47 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#ddd',
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        color: '#666',
+        fontSize: 14,
+    },
+    googleButton: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        flexDirection: 'row',
+        marginBottom: 24,
+    },
+    googleIcon: {
+        marginRight: 10,
+    },
+    googleButtonText: {
+        color: '#333',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-    },
-    footerText: {
-        fontSize: 14,
-        color: '#666',
     },
     linkText: {
         fontSize: 14,
         fontWeight: 'bold',
         color: '#16A34A',
+    },
+    footerText: {
+        fontSize: 14,
+        color: '#666',
     },
 });
