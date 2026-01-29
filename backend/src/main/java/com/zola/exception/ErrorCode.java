@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum ErrorCode {
+    SUCCESS("success", "Success", HttpStatus.OK),
+    
     UNCATEGORIZED_EXCEPTION("uncategorized-exception", "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_KEY("invalid-key", "Uncategorized error", HttpStatus.BAD_REQUEST),
     PASSWORD_MISMATCH("password-mismatch", "Password and Confirm Password do not match", HttpStatus.BAD_REQUEST),

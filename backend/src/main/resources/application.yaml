@@ -1,3 +1,35 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
 spring:
   application:
     name: Zola
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+
+
+
+
+
+
+
+
+
+
+
+open:
+  api:
+    title: "Zola API"
+    version: "v1.0.0"
+    description: "API for Zola Application."
+    server:
+      url: "http://localhost:8080/api"
+      description: "Local Server."
+    group:
+      package-to-scan: "com.zolacontroller"
