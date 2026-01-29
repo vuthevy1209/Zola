@@ -27,8 +27,8 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     RoleRepository roleRepository;
-    UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    UserMapper userMapper;
 
     @Override
     @Transactional

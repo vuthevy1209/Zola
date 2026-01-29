@@ -13,12 +13,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "username", unique = true, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
+    @Column(name = "username", unique = true, columnDefinition = "VARCHAR(255)")
     String username;
 
     @Column(name = "password")
@@ -33,7 +34,7 @@ public class User {
     @Column(name = "dob")
     LocalDate dob;
 
-    @Column(name = "email", unique = true, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
+    @Column(name = "email", unique = true, columnDefinition = "VARCHAR(255)")
     String email;
 
     @Column(name = "is_active")
