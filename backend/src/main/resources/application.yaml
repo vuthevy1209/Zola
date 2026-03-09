@@ -3,6 +3,9 @@ server:
   servlet:
     context-path: /api
 
+client:
+  url: ${CLIENT_URL:http://localhost:3000}
+
 spring:
   # APPLICATION CONFIG
   application:
@@ -12,31 +15,51 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # JACKSON CONFIG
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   # DATASOURCE CONFIG
   datasource:
     url: jdbc:postgresql://localhost:5432/Zola
-    username: postgres
-    password: 123456
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
   # JPA/HIBERNATE CONFIG
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  # MAIL CONFIG (Brevo - From reference project)
+  email:
+    host: https://api.brevo.com
+    api-key: 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
+    endpoint: /v3/smtp/email
+    sender:
+      email: vuthevy12092004@gmail.com
+      name: Vu The Vy
 
+# JWT CONFIG (From reference project)
+jwt:
+  accessSignerKey: 08f4a1dbcc9d54f3d732aa20db2b4c7cd93dfb7e70d59e8d33fdd091e4a3b9c1
+  refreshSignerKey: f0c83c37fdab1129ed0c452d89700f01995a57a42f97e81ac0f3d8e94ee732a4
+  valid-duration: 3600         # 1 hour in seconds
+  refreshable-duration: 604800 # 7 days in seconds
 
+otp:
+  expiration: 5 # in minutes
 
-
-
-
-
-
-
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dghhudods}
+  api-key: ${CLOUDINARY_API_KEY:345575268418537}
+  api-secret: ${CLOUDINARY_API_SECRET:a5b0-MK9if3ucAwoQzu2Y2Gf65o}
 
 open:
   api:
@@ -47,4 +70,4 @@ open:
       url: "http://localhost:8080/api"
       description: "Local Server."
     group:
-      package-to-scan: "com.zolacontroller"
+      package-to-scan: "com.zola.controllers"

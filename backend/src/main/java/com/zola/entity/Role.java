@@ -1,6 +1,5 @@
 package com.zola.entity;
 
-import com.zola.enums.PredefinedRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,9 +13,11 @@ import lombok.experimental.FieldDefaults;
 @Entity
 public class Role {
     @Id
-    @Column(name = "role_name", unique = true, columnDefinition = "VARCHAR(255)")
-    @Enumerated(EnumType.STRING)
-    PredefinedRole roleName;
+    @Column(name = "name", unique = true, columnDefinition = "VARCHAR(255)")
+    String name;
+
+    @Column(name = "role_name")
+    String roleName;
 
     @Column(name = "description")
     String description;

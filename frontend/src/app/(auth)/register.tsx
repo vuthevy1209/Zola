@@ -1,105 +1,214 @@
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/auth.service';
 
 export default function RegisterScreen() {
-    const router = useRouter();
-    const [fullName, setFullName] = useState('');
+    const [step, setStep] = useState<1 | 2>(1);
+    const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleRegister = () => {
-        // Mock register logic
-        console.log('Registering with:', fullName, email, password);
-        // Navigate to login or main app
-        router.replace('/(auth)/login' as any);
+    const router = useRouter();
+    const { signIn } = useAuth();
+    const theme = useTheme();
+
+    const handleRequestOTP = async () => {
+        if (!username || !firstName || !lastName || !email || !phone || !password || !confirmPassword) {
+            setError('Vui lòng nhập đầy đủ thông tin');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Mật khẩu xác nhận không khớp');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+        try {
+            await authService.register({ username, email, phone, firstName, lastName, password });
+            setStep(2);
+        } catch (err: any) {
+            setError(err.response?.data?.message || err.message || 'Đã có lỗi xảy ra');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOTP = async () => {
+        if (!otp) {
+            setError('Vui lòng nhập mã OTP');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+        try {
+            const response = await authService.verifyOTPAndRegister(email, otp);
+            await signIn(response);
+        } catch (err: any) {
+            setError(err.response?.data?.message || err.message || 'OTP không hợp lệ');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-                <View style={styles.header}>
-                    <Text style={styles.title}>Create Account</Text>
-                    <Text style={styles.subtitle}>Sign up to get started</Text>
-                </View>
+            <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+                <View style={styles.formContainer}>
+                    <Text variant="displaySmall" style={styles.title}>Đăng ký</Text>
+                    <Text variant="bodyMedium" style={styles.subtitle}>Tạo tài khoản Zola mới</Text>
 
-                <View style={styles.form}>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Full Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter your full name"
-                            placeholderTextColor="#999"
-                            value={fullName}
-                            onChangeText={setFullName}
-                            autoCapitalize="words"
-                        />
-                    </View>
+                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Email / Phone</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter your email or phone"
-                            placeholderTextColor="#999"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password</Text>
-                        <View style={styles.passwordContainer}>
+                    {step === 1 ? (
+                        <>
                             <TextInput
-                                style={styles.passwordInput}
-                                placeholder="Enter your password"
-                                placeholderTextColor="#999"
+                                label="Tên đăng nhập"
+                                value={username}
+                                onChangeText={setUsername}
+                                autoCapitalize="none"
+                                style={styles.input}
+                                mode="outlined"
+                            />
+
+                            <View style={styles.row}>
+                                <TextInput
+                                    label="Họ"
+                                    value={lastName}
+                                    onChangeText={setLastName}
+                                    style={[styles.input, { flex: 1, marginRight: 8 }]}
+                                    mode="outlined"
+                                />
+                                <TextInput
+                                    label="Tên"
+                                    value={firstName}
+                                    onChangeText={setFirstName}
+                                    style={[styles.input, { flex: 1 }]}
+                                    mode="outlined"
+                                />
+                            </View>
+
+                            <TextInput
+                                label="Email"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                                style={styles.input}
+                                mode="outlined"
+                            />
+
+                            <TextInput
+                                label="Số điện thoại"
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                                style={styles.input}
+                                mode="outlined"
+                            />
+
+                            <TextInput
+                                label="Mật khẩu"
                                 value={password}
                                 onChangeText={setPassword}
                                 secureTextEntry={!showPassword}
+                                style={styles.input}
+                                mode="outlined"
+                                right={
+                                    <TextInput.Icon
+                                        icon={showPassword ? 'eye-off' : 'eye'}
+                                        onPress={() => setShowPassword(v => !v)}
+                                    />
+                                }
                             />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color="#666" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Confirm Password</Text>
-                        <View style={styles.passwordContainer}>
                             <TextInput
-                                style={styles.passwordInput}
-                                placeholder="Confirm your password"
-                                placeholderTextColor="#999"
+                                label="Xác nhận mật khẩu"
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 secureTextEntry={!showConfirmPassword}
+                                style={styles.input}
+                                mode="outlined"
+                                right={
+                                    <TextInput.Icon
+                                        icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                                        onPress={() => setShowConfirmPassword(v => !v)}
+                                    />
+                                }
                             />
-                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
-                                <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} color="#666" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
 
-                    <TouchableOpacity style={styles.button} onPress={handleRegister}>
-                        <Text style={styles.buttonText}>Register</Text>
-                    </TouchableOpacity>
+                            <Button
+                                mode="contained"
+                                onPress={handleRequestOTP}
+                                loading={loading}
+                                disabled={loading}
+                                style={styles.button}
+                            >
+                                Tiếp tục
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={{ marginBottom: 16, textAlign: 'center' }}>
+                                Mã OTP đã được gửi đến {email}
+                            </Text>
 
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>Already have an account? </Text>
-                        <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
-                            <Text style={styles.linkText}>Login</Text>
-                        </TouchableOpacity>
+                            <TextInput
+                                label="Mã OTP"
+                                value={otp}
+                                onChangeText={setOtp}
+                                keyboardType="numeric"
+                                style={styles.input}
+                                mode="outlined"
+                                placeholder="Nhập mã 6 chữ số"
+                            />
+
+                            <Button
+                                mode="contained"
+                                onPress={handleVerifyOTP}
+                                loading={loading}
+                                disabled={loading}
+                                style={styles.button}
+                            >
+                                Xác nhận & Đăng ký
+                            </Button>
+
+                            <Button
+                                mode="text"
+                                onPress={() => setStep(1)}
+                                disabled={loading}
+                                style={{ marginTop: 8 }}
+                            >
+                                Quay lại
+                            </Button>
+                        </>
+                    )}
+
+                    <View style={styles.loginContainer}>
+                        <Text>Đã có tài khoản? </Text>
+                        <Text
+                            style={{ color: theme.colors.primary, fontWeight: 'bold' }}
+                            onPress={() => router.push('/(auth)/login')}
+                        >
+                            Đăng nhập
+                        </Text>
                     </View>
                 </View>
             </ScrollView>
@@ -110,92 +219,44 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: 'center',
-        padding: 24,
     },
-    header: {
-        marginBottom: 40,
-        alignItems: 'center',
+    formContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
     },
     title: {
-        fontSize: 28,
         fontWeight: 'bold',
-        color: '#333',
         marginBottom: 8,
+        textAlign: 'center',
     },
     subtitle: {
-        fontSize: 16,
-        color: '#666',
+        textAlign: 'center',
+        marginBottom: 32,
+        opacity: 0.7,
     },
-    form: {
-        width: '100%',
-    },
-    inputContainer: {
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
+    row: {
+        flexDirection: 'row',
+        marginBottom: 0,
     },
     input: {
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: '#333',
-        backgroundColor: '#f9f9f9',
-    },
-    passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        backgroundColor: '#f9f9f9',
-    },
-    passwordInput: {
-        flex: 1,
-        height: 50,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: '#333',
-    },
-    eyeIcon: {
-        padding: 12,
+        marginBottom: 16,
     },
     button: {
-        height: 50,
-        backgroundColor: '#16A34A', // Primary color
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 24,
-        marginTop: 10,
+        marginTop: 8,
+        paddingVertical: 6,
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+    errorText: {
+        color: 'red',
+        marginBottom: 16,
+        textAlign: 'center',
     },
-    footer: {
+    loginContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-    },
-    footerText: {
-        fontSize: 14,
-        color: '#666',
-    },
-    linkText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#16A34A',
-    },
+        marginTop: 32,
+    }
 });

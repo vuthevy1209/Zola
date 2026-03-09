@@ -3,8 +3,10 @@ package com.zola.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,22 +28,34 @@ public class User {
     @Column(name = "password")
     String password;
 
+    @Column(name = "email", unique = true, columnDefinition = "VARCHAR(255)")
+    String email;
+
+    @Column(name = "phone", unique = true, columnDefinition = "VARCHAR(20)")
+    String phone;
+
     @Column(name = "first_name")
     String firstName;
 
     @Column(name = "last_name")
     String lastName;
 
-    @Column(name = "dob")
-    LocalDate dob;
-
-    @Column(name = "email", unique = true, columnDefinition = "VARCHAR(255)")
-    String email;
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
+    String avatarUrl;
 
     @Column(name = "is_active")
-    Boolean isActive;
+    @Builder.Default
+    Boolean isActive = false; // false until OTP verified
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_name", referencedColumnName = "role_name")
+    @JoinColumn(name = "role_name", referencedColumnName = "name")
     Role role;
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(isActive);
+    }
 }

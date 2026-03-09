@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RoleRepository extends JpaRepository<Role, PredefinedRole> {
-    Boolean deleteByRoleName(PredefinedRole roleName);
+public interface RoleRepository extends JpaRepository<Role, String> {
+    default Role findByRoleName(PredefinedRole roleName) {
+        return findById(roleName.name()).orElse(null);
+    }
 }

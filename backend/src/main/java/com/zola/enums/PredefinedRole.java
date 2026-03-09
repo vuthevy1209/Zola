@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum PredefinedRole {
     USER("USER"),
-    SHOPPER("SHOPPER"),;
+    ADMIN("ADMIN");
 
     private final String roleName;
 

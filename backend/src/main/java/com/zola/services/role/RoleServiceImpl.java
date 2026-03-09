@@ -1,7 +1,6 @@
 package com.zola.services.role;
 
 import com.zola.dto.request.RoleCreationRequest;
-import com.zola.enums.PredefinedRole;
 import com.zola.dto.response.RoleResponse;
 import com.zola.entity.Role;
 import com.zola.mapper.RoleMapper;
@@ -44,6 +43,11 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public Boolean deleteRoleByName(String roleName) {
-        return roleRepository.deleteByRoleName(PredefinedRole.valueOf(roleName));
+        if (roleRepository.existsById(roleName)) {
+            roleRepository.deleteById(roleName);
+            return true;
+        }
+        return false;
     }
+
 }
