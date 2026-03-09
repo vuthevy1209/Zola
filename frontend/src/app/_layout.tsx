@@ -75,6 +75,8 @@ export default function RootLayout() {
                         <Stack>
                         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="addresses" options={{ headerShown: false }} />
+                        <Stack.Screen name="address-form" options={{ headerShown: false }} />
                         <Stack.Screen
                             name="modal"
                             options={{

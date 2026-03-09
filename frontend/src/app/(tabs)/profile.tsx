@@ -57,7 +57,7 @@ export default function ProfileScreen() {
                         titleStyle={styles.listItemTitle}
                         left={(props) => <MaterialCommunityIcons name="map-marker-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}
                         right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" style={styles.listChevron} />}
-                        onPress={() => Alert.alert('Tính năng', 'Cập nhật và thêm địa chỉ giao hàng')}
+                        onPress={() => router.push('/addresses')}
                         style={styles.listItem}
                     />
                     <Divider style={styles.divider} />

@@ -23,6 +23,7 @@ public enum ErrorCode {
     OTP_EXPIRED("otp-expired", "OTP code has expired", HttpStatus.BAD_REQUEST),
     INCORRECT_PASSWORD("incorrect-password", "Incorrect password", HttpStatus.BAD_REQUEST),
     SAME_PASSWORD("same-password", "New password cannot be the same as old password", HttpStatus.BAD_REQUEST),
+    ADDRESS_NOT_FOUND("address-not-found", "Address not found", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
