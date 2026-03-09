@@ -73,18 +73,23 @@ export default function RootLayout() {
                 <RealmProvider>
                     <AuthProvider>
                         <Stack>
-                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen name="addresses" options={{ headerShown: false }} />
-                        <Stack.Screen name="address-form" options={{ headerShown: false }} />
-                        <Stack.Screen
-                            name="modal"
-                            options={{
-                                presentation: 'transparentModal',
-                                animation: 'fade',
-                                headerShown: false,
-                            }}
-                        />
+                            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen name="(account)/addresses" options={{ headerShown: false }} />
+                            <Stack.Screen name="(account)/address-form" options={{ headerShown: false }} />
+                            <Stack.Screen name="(account)/change-password" options={{ headerShown: false }} />
+                            <Stack.Screen name="(account)/profile-settings" options={{ headerShown: false }} />
+                            <Stack.Screen name="(shop)/checkout" options={{ headerShown: false }} />
+                            <Stack.Screen name="(shop)/search" options={{ headerShown: false }} />
+                            <Stack.Screen name="(shop)/favorites" options={{ headerShown: false }} />
+                            <Stack.Screen
+                                name="modal"
+                                options={{
+                                    presentation: 'transparentModal',
+                                    animation: 'fade',
+                                    headerShown: false,
+                                }}
+                            />
                         </Stack>
                     </AuthProvider>
                 </RealmProvider>
