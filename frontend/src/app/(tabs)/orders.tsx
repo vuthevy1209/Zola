@@ -1,15 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, useTheme, ActivityIndicator, Chip } from 'react-native-paper';
+import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { orderService, Order, OrderStatus } from '@/services/order.service';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const TABS = [
-    { value: 'PROCESSING', label: 'Đang xử lý' },
-    { value: 'DELIVERED', label: 'Đã giao' },
-    { value: 'CANCELLED', label: 'Đã hủy' },
+    { value: 'PROCESSING', label: 'Đang xử lý', icon: 'clock-outline' },
+    { value: 'DELIVERED', label: 'Đã giao', icon: 'check-circle-outline' },
+    { value: 'CANCELLED', label: 'Đã hủy', icon: 'close-circle-outline' },
 ];
 
 const getStatusLabel = (status: OrderStatus) => {
@@ -35,19 +35,21 @@ export default function OrdersScreen() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<string>('PROCESSING');
+    const initialLoadDone = useRef(false);
 
-    useFocusEffect(
-        useCallback(() => {
-            loadOrders();
-        }, [])
-    );
-
-    const loadOrders = async () => {
-        setLoading(true);
+    const loadOrders = async (showLoader = true) => {
+        if (showLoader) setLoading(true);
         const data = await orderService.getOrderHistory();
         setOrders(data);
         setLoading(false);
+        initialLoadDone.current = true;
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            loadOrders(!initialLoadDone.current);
+        }, [])
+    );
 
     const filteredOrders = orders.filter(o => {
         if (activeTab === 'PROCESSING') {
@@ -123,18 +125,31 @@ export default function OrdersScreen() {
                     contentContainerStyle={styles.tabsListContent}
                     data={TABS}
                     keyExtractor={item => item.value}
-                    renderItem={({ item }) => (
-                        <Chip
-                            selected={activeTab === item.value}
-                            onPress={() => setActiveTab(item.value)}
-                            style={[styles.tabChip, activeTab === item.value && styles.activeTabChip]}
-                            mode={activeTab === item.value ? 'flat' : 'outlined'}
-                            textStyle={activeTab === item.value ? styles.activeTabText : styles.inactiveTabText}
-                            selectedColor={activeTab === item.value ? '#FFFFFF' : theme.colors.primary}
-                        >
-                            {item.label}
-                        </Chip>
-                    )}
+                    renderItem={({ item }) => {
+                        const isActive = activeTab === item.value;
+                        return (
+                            <TouchableOpacity
+                                onPress={() => setActiveTab(item.value)}
+                                style={[
+                                    styles.tabChip,
+                                    isActive
+                                        ? { backgroundColor: theme.colors.primary }
+                                        : { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E0E0E0' },
+                                ]}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialCommunityIcons
+                                    name={item.icon as any}
+                                    size={15}
+                                    color={isActive ? '#FFFFFF' : '#888'}
+                                    style={{ marginRight: 5 }}
+                                />
+                                <Text style={isActive ? styles.activeTabText : styles.inactiveTabText}>
+                                    {item.label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    }}
                 />
             </View>
 
@@ -200,12 +215,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     tabChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderRadius: 20,
-        backgroundColor: 'transparent',
-        borderColor: 'transparent',
-    },
-    activeTabChip: {
-        backgroundColor: '#333',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        marginRight: 8,
     },
     activeTabText: {
         color: '#FFFFFF',

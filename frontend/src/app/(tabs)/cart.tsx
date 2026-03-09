@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, StyleSheet, FlatList, Image, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
@@ -13,15 +13,16 @@ export default function CartScreen() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
+    const initialLoadDone = useRef(false);
 
     useFocusEffect(
         useCallback(() => {
-            loadCart();
+            loadCart(!initialLoadDone.current);
         }, [])
     );
 
-    const loadCart = async () => {
-        setLoading(true);
+    const loadCart = async (showLoader = true) => {
+        if (showLoader) setLoading(true);
         const items = await cartService.getCart();
         setCartItems(items);
 
@@ -33,6 +34,7 @@ export default function CartScreen() {
         setSelectedItems(newSelection);
 
         setLoading(false);
+        initialLoadDone.current = true;
     };
 
     const updateQuantity = async (productId: string, quantity: number) => {
@@ -41,7 +43,7 @@ export default function CartScreen() {
             return;
         }
         await cartService.updateQuantity(productId, quantity);
-        await loadCart();
+        await loadCart(false);
     };
 
     const confirmRemove = (productId: string) => {
@@ -50,7 +52,7 @@ export default function CartScreen() {
             {
                 text: 'Xóa', style: 'destructive', onPress: async () => {
                     await cartService.removeFromCart(productId);
-                    await loadCart();
+                    await loadCart(false);
                 }
             }
         ]);
@@ -106,7 +108,18 @@ export default function CartScreen() {
     );
 
     if (loading) {
-        return <ActivityIndicator style={styles.center} />;
+        return (
+            <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/(tabs)')} style={styles.backBtn}>
+                        <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
+                    <View style={{ width: 44 }} />
+                </View>
+                <ActivityIndicator style={styles.center} />
+            </SafeAreaView>
+        );
     }
 
     return (
@@ -151,7 +164,7 @@ export default function CartScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.checkoutButton, selectedCartItems.length === 0 && { opacity: 0.5 }]}
+                        style={[styles.checkoutButton, { backgroundColor: theme.colors.primary }, selectedCartItems.length === 0 && { opacity: 0.5 }]}
                         onPress={() => router.push('/checkout')}
                         disabled={selectedCartItems.length === 0}
                     >
@@ -331,7 +344,6 @@ const styles = StyleSheet.create({
         color: '#222',
     },
     checkoutButton: {
-        backgroundColor: '#2A2A2A',
         borderRadius: 30,
         paddingVertical: 18,
         alignItems: 'center',
