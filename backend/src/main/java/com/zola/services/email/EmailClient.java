@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "email-client", url = "${spring.email.host}")
+@FeignClient(name = "email-client", url = "${email.host}")
 public interface EmailClient {
-    @PostMapping(value = "${spring.email.endpoint}", consumes = "application/json")
+    @PostMapping(value = "${email.endpoint}", consumes = "application/json")
     String sendEmail(
             @RequestHeader("api-key") String apiKey,
             @RequestBody EmailRequest emailRequest);

@@ -19,15 +19,15 @@ public class EmailServiceImpl implements EmailService {
     EmailClient emailClient;
 
     @NonFinal
-    @Value("${spring.email.api-key}")
+    @Value("${email.api-key}")
     String apiKey;
 
     @NonFinal
-    @Value("${spring.email.sender.email}")
+    @Value("${email.sender.email}")
     String senderEmail;
 
     @NonFinal
-    @Value("${spring.email.sender.name}")
+    @Value("${email.sender.name}")
     String senderName;
 
     @Override

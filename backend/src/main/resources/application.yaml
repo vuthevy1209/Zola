@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
 
@@ -22,7 +22,7 @@ spring:
 
   # DATASOURCE CONFIG
   datasource:
-    url: jdbc:postgresql://localhost:5432/Zola
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/Zola}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
@@ -37,29 +37,29 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # MAIL CONFIG (Brevo - From reference project)
-  email:
-    host: https://api.brevo.com
-    api-key: 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
-    endpoint: /v3/smtp/email
-    sender:
-      email: vuthevy12092004@gmail.com
-      name: Vu The Vy
-
-# JWT CONFIG (From reference project)
+# JWT CONFIG
 jwt:
-  accessSignerKey: 08f4a1dbcc9d54f3d732aa20db2b4c7cd93dfb7e70d59e8d33fdd091e4a3b9c1
-  refreshSignerKey: f0c83c37fdab1129ed0c452d89700f01995a57a42f97e81ac0f3d8e94ee732a4
-  valid-duration: 3600         # 1 hour in seconds
-  refreshable-duration: 604800 # 7 days in seconds
+  accessSignerKey: ${JWT_ACCESS_SIGNER_KEY}
+  refreshSignerKey: ${JWT_REFRESH_SIGNER_KEY}
+  valid-duration: ${JWT_VALID_DURATION:3600}
+  refreshable-duration: ${JWT_REFRESHABLE_DURATION:604800}
+
+# MAIL CONFIG (Brevo)
+email:
+  host: ${EMAIL_HOST:https://api.brevo.com}
+  api-key: ${EMAIL_API_KEY}
+  endpoint: /v3/smtp/email
+  sender:
+    email: ${EMAIL_SENDER_EMAIL}
+    name: ${EMAIL_SENDER_NAME}
 
 otp:
-  expiration: 5 # in minutes
+  expiration: ${OTP_EXPIRATION:5}
 
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:dghhudods}
-  api-key: ${CLOUDINARY_API_KEY:345575268418537}
-  api-secret: ${CLOUDINARY_API_SECRET:a5b0-MK9if3ucAwoQzu2Y2Gf65o}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
 
 open:
   api:
