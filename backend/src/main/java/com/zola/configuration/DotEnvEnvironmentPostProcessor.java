@@ -72,7 +72,7 @@ public class DotEnvEnvironmentPostProcessor implements EnvironmentPostProcessor,
                     new MapPropertySource(PROPERTY_SOURCE_NAME, properties)
             );
             log.info("[DotEnv] Loaded " + properties.size() + " properties from " + envFile.getAbsolutePath());
-            properties.forEach((key, value) -> log.info("[DotEnv]  " + key + " = " + value));
+            // properties.forEach((key, value) -> log.info("[DotEnv]  " + key + " = " + value));
         }
     }
 
