@@ -4,6 +4,7 @@ import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
+import OtpInput from '@/components/OtpInput';
 
 export default function RegisterScreen() {
     const [step, setStep] = useState<1 | 2>(1);
@@ -166,18 +167,15 @@ export default function RegisterScreen() {
                         </>
                     ) : (
                         <>
-                            <Text style={{ marginBottom: 16, textAlign: 'center' }}>
-                                Mã OTP đã được gửi đến {email}
+                            <Text style={{ marginBottom: 28, textAlign: 'center', color: '#555' }}>
+                                Mã OTP đã được gửi đến{' '}
+                                <Text style={{ fontWeight: 'bold', color: '#1D1D1D' }}>{email}</Text>
                             </Text>
 
-                            <TextInput
-                                label="Mã OTP"
+                            <OtpInput
                                 value={otp}
-                                onChangeText={setOtp}
-                                keyboardType="numeric"
-                                style={styles.input}
-                                mode="outlined"
-                                placeholder="Nhập mã 6 chữ số"
+                                onChange={setOtp}
+                                primaryColor={theme.colors.primary}
                             />
 
                             <Button

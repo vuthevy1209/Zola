@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { authService } from '@/services/auth.service';
+import OtpInput from '@/components/OtpInput';
 
 const OTP_RESEND_SECONDS = 60;
 
@@ -240,23 +241,11 @@ export default function ForgotPasswordScreen() {
                     {/* ── Step 2: OTP ──────────────────────────────────── */}
                     {step === 2 && (
                         <>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Mã OTP</Text>
-                                <TextInput
-                                    value={otp}
-                                    onChangeText={text => setOtp(text.replace(/[^0-9]/g, '').slice(0, 6))}
-                                    keyboardType="number-pad"
-                                    maxLength={6}
-                                    placeholder="Nhập mã 6 chữ số"
-                                    style={styles.input}
-                                    textColor="#1D1D1D"
-                                    cursorColor="#1D1D1D"
-                                    underlineColor="transparent"
-                                    activeUnderlineColor="transparent"
-                                    theme={{ colors: { background: 'transparent' } }}
-                                />
-                                <View style={styles.bottomLine} />
-                            </View>
+                            <OtpInput
+                                value={otp}
+                                onChange={setOtp}
+                                primaryColor={theme.colors.primary}
+                            />
 
                             <View style={styles.resendRow}>
                                 <Text style={styles.resendLabel}>Không nhận được mã? </Text>
@@ -408,7 +397,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent', fontSize: 16, fontWeight: '500',
     },
     bottomLine: { height: 1, backgroundColor: '#EAEAEA', width: '100%' },
-    resendRow: { flexDirection: 'row', alignItems: 'center', marginTop: -12, marginBottom: 24 },
+    resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 24 },
     resendLabel: { fontSize: 13, color: '#666' },
     resendLink: { fontSize: 13, fontWeight: 'bold' },
     countdown: { fontSize: 13, color: '#999' },
