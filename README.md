@@ -1,12 +1,12 @@
 # Zola
 
-Ứng dụng thương mại điện tử gồm **Backend** (Spring Boot) và **Frontend** (React Native / Expo).
+An e-commerce application with a **Backend** (Spring Boot) and **Frontend** (React Native / Expo).
 
 ---
 
-## Yêu cầu môi trường
+## Requirements
 
-| Công cụ | Phiên bản |
+| Tool | Version |
 |---|---|
 | Java | 21+ |
 | Maven | 3.8+ |
@@ -18,7 +18,7 @@
 
 ## Backend
 
-### 1. Tạo file `.env` trong thư mục `backend/`
+### 1. Create a `.env` file in the `backend/` directory
 
 ```env
 DB_URL=jdbc:postgresql://localhost:5432/Zola
@@ -37,28 +37,28 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-### 2. Tạo database PostgreSQL
+### 2. Create the PostgreSQL database
 
 ```sql
 CREATE DATABASE "Zola";
 ```
 
-### 3. Chạy backend
+### 3. Run the backend
 
-**Cách 1 — Terminal:**
+**Option 1 — Terminal:**
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-**Cách 2 — IntelliJ IDEA:**
+**Option 2 — IntelliJ IDEA:**
 
-1. Mở thư mục `backend/` bằng IntelliJ
-2. Cài plugin **EnvFile** (hoặc cấu hình biến môi trường thủ công trong Run Configuration)
-3. Nhấn **Run** vào class `ZolaApplication`
+1. Open the `backend/` folder in IntelliJ
+2. Install the **EnvFile** plugin (or manually configure environment variables in the Run Configuration)
+3. Click **Run** on the `ZolaApplication` class
 
-Backend sẽ chạy tại: `http://localhost:8080/api`
+Backend will be available at: `http://localhost:8080/api`
 
 Swagger UI: `http://localhost:8080/api/swagger-ui.html`
 
@@ -66,40 +66,40 @@ Swagger UI: `http://localhost:8080/api/swagger-ui.html`
 
 ## Frontend
 
-> Frontend dùng **Expo Dev Client** — **không** tương thích với Expo Go vì có native modules (Realm, expo-image-picker, ...).
+> The frontend uses **Expo Dev Client** — it is **not** compatible with Expo Go due to native modules (Realm, expo-image-picker, etc.).
 
-### 1. Cài JS dependencies
+### 1. Install JS dependencies
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 2. Lần đầu — Build native và cài lên emulator
+### 2. First time — Build native code and install on emulator
 
-Khởi động Android Emulator từ Android Studio trước, sau đó:
+Start the Android Emulator from Android Studio first, then:
 
 ```bash
 npx expo run:android
 ```
 
-Lệnh này sẽ compile toàn bộ native code (Gradle) và cài APK lên emulator. Mất khoảng **5–10 phút** lần đầu.
+This will compile all native code (Gradle) and install the APK on the emulator. This may take **5–10 minutes** the first time.
 
-### 3. Từ lần 2 trở đi
+### 3. Subsequent runs
 
-Nếu không thay đổi native code (không thêm/xóa thư viện), chỉ cần:
+If no native code has changed (no libraries added or removed), simply run:
 
 ```bash
 npx expo start --dev-client
 ```
 
-Sau đó mở app **Zola** trên emulator — app sẽ tự kết nối với Metro bundler.
+Then open the **Zola** app on the emulator — it will automatically connect to the Metro bundler.
 
 ---
 
-## Lưu ý
+## Notes
 
-- Đảm bảo **backend đang chạy** trước khi khởi động app.
-- Khi chạy trên emulator Android, backend cần dùng IP `10.0.2.2` thay cho `localhost`.
-- Khi chạy trên thiết bị thực, cần điền **IP LAN** của máy (dùng `ipconfig getifaddr en0` trên macOS để lấy IP).
-- Cập nhật `BASE_URL` trong `frontend/src/services/api.ts` cho phù hợp với môi trường.
+- Make sure the **backend is running** before starting the app.
+- When running on an Android emulator, use `10.0.2.2` instead of `localhost` for the backend host.
+- When running on a physical device, use the **LAN IP** of your machine (run `ipconfig getifaddr en0` on macOS to get the IP).
+- Update `BASE_URL` in `frontend/src/services/api.ts` to match your environment.
