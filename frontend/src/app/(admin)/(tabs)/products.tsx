@@ -49,7 +49,7 @@ export default function AdminProducts() {
                     <Chip compact icon="tag-outline" style={styles.chip} textStyle={{ fontSize: 11 }}>
                         {adminProductService.getCategories().find(c => c.id === item.categoryId)?.name ?? '—'}
                     </Chip>
-                    <Text variant="bodySmall" style={{ color: '#888' }}>Đã bán: {item.sold}</Text>
+                    <Text variant="bodySmall" style={styles.soldText}>Đã bán: {item.sold}</Text>
                 </View>
             </View>
             <View style={styles.actions}>
@@ -106,8 +106,9 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, padding: 10, alignItems: 'center' },
     img: { width: 64, height: 64, borderRadius: 8, backgroundColor: '#eee' },
     info: { flex: 1, marginLeft: 10 },
-    meta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-    chip: { backgroundColor: '#E8F5E9', height: 24 },
+    meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 5 },
+    chip: { backgroundColor: '#E8F5E9', alignSelf: 'flex-start' },
+    soldText: { color: '#888', fontSize: 12 },
     actions: { flexDirection: 'column', alignItems: 'center' },
     separator: { height: 8 },
     fab: { position: 'absolute', right: 16, bottom: 24 },
