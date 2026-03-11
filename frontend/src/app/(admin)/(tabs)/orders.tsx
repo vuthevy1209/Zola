@@ -1,12 +1,9 @@
 import { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Text, useTheme, Menu, Divider } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { adminOrderService, AdminOrder, AdminOrderStatus } from '@/services/admin.service';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-const STATUS_FLOW: AdminOrderStatus[] = ['NEW', 'CONFIRMED', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
 
 const STATUS_LABEL: Record<AdminOrderStatus, string> = {
     NEW: 'Mới', CONFIRMED: 'Xác nhận', PREPARING: 'Chuẩn bị',
@@ -31,14 +28,11 @@ const FILTER_TABS: { value: AdminOrderStatus | 'ALL'; label: string }[] = [
 const formatPrice = (price: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-function OrderCard({ order, onStatusChange }: { order: AdminOrder; onStatusChange: () => void }) {
-    const [menuVisible, setMenuVisible] = useState(false);
+function OrderCard({ order, onPress }: { order: AdminOrder; onPress: () => void }) {
     const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
-    const nextStatuses = STATUS_FLOW.filter(s => s !== order.status && s !== 'CANCELLED');
-    const canUpdate = order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
 
     return (
-        <View style={styles.orderCard}>
+        <TouchableOpacity style={styles.orderCard} onPress={onPress} activeOpacity={0.8}>
             {/* Header */}
             <View style={styles.cardHeader}>
                 <Text style={styles.orderIdText}>
@@ -84,58 +78,17 @@ function OrderCard({ order, onStatusChange }: { order: AdminOrder; onStatusChang
                 <Text style={[styles.statusText, { color: STATUS_COLOR[order.status] }]}>
                     {STATUS_LABEL[order.status].toUpperCase()}
                 </Text>
-
-                {canUpdate ? (
-                    <Menu
-                        visible={menuVisible}
-                        onDismiss={() => setMenuVisible(false)}
-                        anchor={
-                            <TouchableOpacity
-                                style={styles.updateBtn}
-                                onPress={() => setMenuVisible(true)}
-                            >
-                                <Text style={styles.updateBtnText}>Cập nhật</Text>
-                            </TouchableOpacity>
-                        }
-                    >
-                        {nextStatuses.map(s => (
-                            <Menu.Item
-                                key={s}
-                                title={STATUS_LABEL[s]}
-                                leadingIcon="arrow-right"
-                                onPress={() => {
-                                    adminOrderService.updateStatus(order.id, s);
-                                    setMenuVisible(false);
-                                    onStatusChange();
-                                }}
-                            />
-                        ))}
-                        <Divider />
-                        <Menu.Item
-                            title="Hủy đơn"
-                            leadingIcon="close-circle-outline"
-                            titleStyle={{ color: '#D32F2F' }}
-                            onPress={() => {
-                                adminOrderService.updateStatus(order.id, 'CANCELLED');
-                                setMenuVisible(false);
-                                onStatusChange();
-                            }}
-                        />
-                    </Menu>
-                ) : (
-                    <View style={styles.updateBtn}>
-                        <Text style={[styles.updateBtnText, { color: '#aaa' }]}>
-                            {order.status === 'DELIVERED' ? 'Hoàn thành' : 'Đã hủy'}
-                        </Text>
-                    </View>
-                )}
+                <View style={styles.detailsBtn}>
+                    <Text style={styles.detailsBtnText}>Chi tiết</Text>
+                </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 
 export default function AdminOrders() {
     const theme = useTheme();
+    const router = useRouter();
     const [orders, setOrders] = useState<AdminOrder[]>([]);
     const [filter, setFilter] = useState<AdminOrderStatus | 'ALL'>('ALL');
 
@@ -186,7 +139,10 @@ export default function AdminOrders() {
                 data={filtered}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                    <OrderCard order={item} onStatusChange={loadOrders} />
+                    <OrderCard
+                        order={item}
+                        onPress={() => router.push({ pathname: '/(admin)/order/[id]', params: { id: item.id } })}
+                    />
                 )}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
@@ -244,10 +200,10 @@ const styles = StyleSheet.create({
         alignItems: 'center', marginTop: 4,
     },
     statusText: { fontSize: 14, fontWeight: '600' },
-    updateBtn: {
+    detailsBtn: {
         paddingHorizontal: 20, paddingVertical: 8,
         borderRadius: 20, borderWidth: 1,
         borderColor: '#EAEAEA', backgroundColor: '#fff',
     },
-    updateBtnText: { fontSize: 14, fontWeight: '600', color: '#222' },
+    detailsBtnText: { fontSize: 14, fontWeight: '600', color: '#222' },
 });
