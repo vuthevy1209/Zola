@@ -20,7 +20,7 @@ export interface Product {
     categoryId: string;
 }
 
-const mockCategories: Category[] = [
+export const mockCategories: Category[] = [
     { id: '1', name: 'Điện thoại', icon: 'cellphone', image: 'https://picsum.photos/id/1/200/200' },
     { id: '2', name: 'Laptop', icon: 'laptop', image: 'https://picsum.photos/id/2/200/200' },
     { id: '3', name: 'Đồng hồ', icon: 'watch', image: 'https://picsum.photos/id/3/200/200' },

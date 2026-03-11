@@ -83,14 +83,7 @@ export default function RootLayout() {
                             <Stack.Screen name="(shop)/checkout" options={{ headerShown: false }} />
                             <Stack.Screen name="(shop)/search" options={{ headerShown: false }} />
                             <Stack.Screen name="(shop)/favorites" options={{ headerShown: false }} />
-                            <Stack.Screen
-                                name="modal"
-                                options={{
-                                    presentation: 'transparentModal',
-                                    animation: 'fade',
-                                    headerShown: false,
-                                }}
-                            />
+
                         </Stack>
                     </AuthProvider>
                 </RealmProvider>

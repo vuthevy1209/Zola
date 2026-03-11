@@ -101,8 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // Save to Realm
             realm.write(() => {
-                const allUsers = realm.objects('UserProfile');
-                realm.delete(allUsers);
+                const previousSession = realm.objects('UserProfile');
+                realm.delete(previousSession);
 
                 realm.create('UserProfile', {
                     id: authData.user.id.toString(),
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     firstName: updatedUser.firstName,
                     lastName: updatedUser.lastName,
                     email: updatedUser.email,
-                    phone: updatedUser.phone || undefined,
+                    phone: updatedUser.phone,
                     avatarUrl: updatedUser.avatarUrl || undefined,
                     role: updatedUser.role,
                     createdAt: updatedUser.createdAt,
