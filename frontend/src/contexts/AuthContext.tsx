@@ -31,10 +31,20 @@ function useProtectedRoute(user: UserProfile | null, isLoading: boolean) {
         if (isLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
+        const inAdminGroup = segments[0] === '(admin)';
+        const isAdmin = user?.role === 'ADMIN';
 
         if (!user && !inAuthGroup) {
+            // Chưa đăng nhập → về login
             router.replace('/(auth)/login');
         } else if (user && inAuthGroup) {
+            // Vừa đăng nhập → route theo role
+            router.replace(isAdmin ? '/(admin)' : '/(tabs)');
+        } else if (user && isAdmin && !inAdminGroup) {
+            // Admin cố truy cập màn hình user → về admin
+            router.replace('/(admin)');
+        } else if (user && !isAdmin && inAdminGroup) {
+            // User cố truy cập màn hình admin → về tabs
             router.replace('/(tabs)');
         }
     }, [user, segments, isLoading]);
@@ -100,8 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     firstName: authData.user.firstName,
                     lastName: authData.user.lastName,
                     email: authData.user.email,
-                    phone: authData.user.phone,
-                    avatarUrl: authData.user.avatarUrl || null,
+                    phone: authData.user.phone || undefined,
+                    avatarUrl: authData.user.avatarUrl || undefined,
                     role: authData.user.role,
                     createdAt: authData.user.createdAt,
                 });
@@ -135,8 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     firstName: updatedUser.firstName,
                     lastName: updatedUser.lastName,
                     email: updatedUser.email,
-                    phone: updatedUser.phone,
-                    avatarUrl: updatedUser.avatarUrl || null,
+                    phone: updatedUser.phone || undefined,
+                    avatarUrl: updatedUser.avatarUrl || undefined,
                     role: updatedUser.role,
                     createdAt: updatedUser.createdAt,
                 }, Realm.UpdateMode.Modified);

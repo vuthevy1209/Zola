@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Base URL for backend. For Android emulator use 10.0.2.2, for iOS simulator use localhost.
-const BASE_URL = 'http://192.168.1.213:8080/api';
+const BASE_URL = 'http://10.20.1.95:8080/api';
 
 const api = axios.create({
     baseURL: BASE_URL,

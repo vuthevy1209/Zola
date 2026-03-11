@@ -71,3 +71,10 @@ open:
       description: "Local Server."
     group:
       package-to-scan: "com.zola.controllers"
+
+init:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin}
+    email: ${ADMIN_EMAIL:admin@gmail.com}
+    phone: ${ADMIN_PHONE:0354802825}

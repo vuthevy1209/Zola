@@ -75,6 +75,7 @@ export default function RootLayout() {
                         <Stack>
                             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
                             <Stack.Screen name="(account)/addresses" options={{ headerShown: false }} />
                             <Stack.Screen name="(account)/address-form" options={{ headerShown: false }} />
                             <Stack.Screen name="(account)/change-password" options={{ headerShown: false }} />

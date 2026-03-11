@@ -7,7 +7,7 @@ export class UserProfile extends Realm.Object<UserProfile> {
     firstName!: string;
     lastName!: string;
     email!: string;
-    phone!: string;
+    phone?: string;
     avatarUrl?: string;
     role!: string;
     createdAt?: string;
@@ -18,7 +18,7 @@ export class UserProfile extends Realm.Object<UserProfile> {
 
 const realmConfig: Realm.Configuration = {
     schema: [UserProfile],
-    schemaVersion: 2,
+    schemaVersion: 3,
 };
 
 export const { RealmProvider, useRealm, useQuery, useObject } = createRealmContext(realmConfig);
