@@ -60,7 +60,7 @@ export default function SearchScreen() {
     const renderProduct = ({ item }: { item: Product }) => (
         <TouchableOpacity
             style={[styles.resultItem, { borderBottomColor: theme.colors.outlineVariant }]}
-            onPress={() => router.push(`/(tabs)/product/${item.id}`)}
+            onPress={() => router.push(`/product/${item.id}`)}
         >
             <Image source={{ uri: item.image }} style={styles.resultImage} />
             <View style={styles.resultContent}>

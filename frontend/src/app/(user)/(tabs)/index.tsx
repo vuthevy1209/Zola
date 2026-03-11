@@ -73,7 +73,7 @@ export default function HomeScreen() {
   const renderProductItem = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}
-      onPress={() => router.push(`/(tabs)/product/${item.id}`)}
+      onPress={() => router.push(`/product/${item.id}`)}
       activeOpacity={0.8}
     >
       <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="cover" />
@@ -142,7 +142,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={prod.id}
             style={styles.hotProductCard}
-            onPress={() => router.push(`/(tabs)/product/${prod.id}`)}
+            onPress={() => router.push(`/product/${prod.id}`)}
           >
             <Image source={{ uri: prod.image }} style={styles.hotProductImage} />
             <Text numberOfLines={1} style={styles.hotProductName}>{prod.name}</Text>

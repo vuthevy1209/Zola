@@ -111,7 +111,7 @@ export default function CartScreen() {
         return (
             <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/(tabs)')} style={styles.backBtn}>
+                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/')} style={styles.backBtn}>
                         <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
@@ -125,7 +125,7 @@ export default function CartScreen() {
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/(tabs)')} style={styles.backBtn}>
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/')} style={styles.backBtn}>
                     <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>

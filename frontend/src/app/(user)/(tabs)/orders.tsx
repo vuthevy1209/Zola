@@ -111,7 +111,7 @@ export default function OrdersScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: '#FAFAFA' }]} edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/(tabs)')} style={styles.backBtn}>
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/')} style={styles.backBtn}>
                     <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Đơn hàng của bạn</Text>

@@ -12,7 +12,7 @@ import { RealmProvider } from '@/storage/realm';
 
 
 export const unstable_settings = {
-    anchor: '(tabs)',
+    anchor: '(user)',
 };
 
 const customPaperTheme = {
@@ -74,16 +74,8 @@ export default function RootLayout() {
                     <AuthProvider>
                         <Stack>
                             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen name="(user)" options={{ headerShown: false }} />
                             <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                            <Stack.Screen name="(account)/addresses" options={{ headerShown: false }} />
-                            <Stack.Screen name="(account)/address-form" options={{ headerShown: false }} />
-                            <Stack.Screen name="(account)/change-password" options={{ headerShown: false }} />
-                            <Stack.Screen name="(account)/profile-settings" options={{ headerShown: false }} />
-                            <Stack.Screen name="(shop)/checkout" options={{ headerShown: false }} />
-                            <Stack.Screen name="(shop)/search" options={{ headerShown: false }} />
-                            <Stack.Screen name="(shop)/favorites" options={{ headerShown: false }} />
-
                         </Stack>
                     </AuthProvider>
                 </RealmProvider>

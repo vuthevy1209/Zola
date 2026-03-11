@@ -32,6 +32,7 @@ function useProtectedRoute(user: UserProfile | null, isLoading: boolean) {
 
         const inAuthGroup = segments[0] === '(auth)';
         const inAdminGroup = segments[0] === '(admin)';
+        const inUserGroup = segments[0] === '(user)';
         const isAdmin = user?.role === 'ADMIN';
 
         if (!user && !inAuthGroup) {
@@ -39,13 +40,13 @@ function useProtectedRoute(user: UserProfile | null, isLoading: boolean) {
             router.replace('/(auth)/login');
         } else if (user && inAuthGroup) {
             // Vừa đăng nhập → route theo role
-            router.replace(isAdmin ? '/(admin)' : '/(tabs)');
+            router.replace(isAdmin ? '/(admin)' : '/(user)');
         } else if (user && isAdmin && !inAdminGroup) {
             // Admin cố truy cập màn hình user → về admin
             router.replace('/(admin)');
         } else if (user && !isAdmin && inAdminGroup) {
-            // User cố truy cập màn hình admin → về tabs
-            router.replace('/(tabs)');
+            // User cố truy cập màn hình admin → về user
+            router.replace('/(user)');
         }
     }, [user, segments, isLoading]);
 }

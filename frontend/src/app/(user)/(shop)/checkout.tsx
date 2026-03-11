@@ -32,7 +32,7 @@ export default function CheckoutScreen() {
         setLoading(false);
 
         if (items.length === 0) {
-            router.replace('/(tabs)/cart');
+            router.replace('/cart');
         }
     };
 
@@ -69,7 +69,7 @@ export default function CheckoutScreen() {
                 'Đặt hàng thành công! Trạng thái đơn hàng đang chờ xác nhận.',
                 [
                     { text: 'Xem đơn hàng', onPress: () => router.replace(`/order/${order.id}`) },
-                    { text: 'Trang chủ', onPress: () => router.replace('/(tabs)') }
+                    { text: 'Trang chủ', onPress: () => router.replace('/') }
                 ]
             );
         } catch (error) {
