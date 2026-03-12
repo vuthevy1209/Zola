@@ -1,58 +1,93 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
-import { Text, useTheme, Button, IconButton, ActivityIndicator, Divider } from 'react-native-paper';
-import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
-import { productService, Product } from '@/services/product.service';
+import { Text, Button, IconButton, ActivityIndicator } from 'react-native-paper';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { productService, Product, ProductVariant } from '@/services/product.service';
 import { cartService } from '@/services/cart.service';
 import { interactionService, Review } from '@/services/interaction.service';
 
 const { width } = Dimensions.get('window');
+const CONTENT_SHEET_OVERLAP = 40;
 
 export default function ProductDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const theme = useTheme();
     const router = useRouter();
-    const navigation = useNavigation();
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [isLiked, setIsLiked] = useState(false);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [addingToCart, setAddingToCart] = useState(false);
-    const [selectedColor, setSelectedColor] = useState('#E4CDC0');
-    const [selectedSize, setSelectedSize] = useState('M');
+    const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
+    const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
     const [isDescExpanded, setIsDescExpanded] = useState(true);
     const [isReviewsExpanded, setIsReviewsExpanded] = useState(true);
+    const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (id) {
-            loadProduct();
-        }
+        if (id) loadProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadProduct = async () => {
         setLoading(true);
         try {
             const [data, revs, liked] = await Promise.all([
-                productService.getProductDetail(id),
+                productService.getProductById(id),
                 interactionService.getReviews(id),
-                interactionService.checkIsFavorite(id)
+                interactionService.checkIsFavorite(id),
             ]);
             setProduct(data);
             setReviews(revs);
             setIsLiked(liked);
 
-            // Set header title dynamically
-            navigation.setOptions({
-                title: data?.name || 'Chi tiết',
-                headerTitleStyle: { fontSize: 16 }
-            });
+            // Default selected image (primary first)
+            const primaryImg = data.images.find(img => img.isPrimary) ?? data.images[0];
+            if (primaryImg) setSelectedImageUrl(primaryImg.imageUrl);
+
+            // Default selections
+            const firstColor = data.variants.find(v => v.color)?.color;
+            const firstSize = data.variants.find(v => v.size)?.size;
+            if (firstColor) setSelectedColorId(firstColor.id);
+            if (firstSize) setSelectedSizeId(firstSize.id);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
         }
     };
+
+    // Images sorted: primary first
+    const sortedImages = useMemo(() => {
+        if (!product) return [];
+        return [...product.images].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+    }, [product]);
+
+    // Unique colors from variants
+    const availableColors = useMemo(() => {
+        if (!product) return [];
+        const seen = new Set<number>();
+        return product.variants
+            .filter(v => v.color && !seen.has(v.color.id) && seen.add(v.color.id))
+            .map(v => v.color!);
+    }, [product]);
+
+    // Sizes available for selected color
+    const availableSizes = useMemo(() => {
+        if (!product) return [];
+        const seen = new Set<number>();
+        return product.variants
+            .filter(v => v.size && v.color?.id === selectedColorId && !seen.has(v.size.id) && seen.add(v.size.id))
+            .map(v => v.size!);
+    }, [product, selectedColorId]);
+
+    // Selected variant
+    const selectedVariant = useMemo<ProductVariant | undefined>(() => {
+        if (!product) return undefined;
+        return product.variants.find(
+            v => v.color?.id === selectedColorId && v.size?.id === selectedSizeId
+        );
+    }, [product, selectedColorId, selectedSizeId]);
 
     const handleToggleFavorite = async () => {
         if (!product) return;
@@ -73,9 +108,8 @@ export default function ProductDetailScreen() {
         }
     };
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
+    const formatPrice = (price: number) =>
+        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
     if (loading) {
         return (
@@ -103,13 +137,31 @@ export default function ProductDetailScreen() {
             >
                 {/* Image Section */}
                 <View style={styles.imageContainer}>
-                    <Image source={{ uri: product.image }} style={styles.productImage} resizeMode="cover" />
+                    <Image source={{ uri: selectedImageUrl ?? undefined }} style={styles.productImage} resizeMode="cover" />
+                    {sortedImages.length > 1 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.thumbnailStrip}
+                            contentContainerStyle={{ paddingHorizontal: 12, gap: 8 }}
+                        >
+                            {sortedImages.map(img => (
+                                <TouchableOpacity
+                                    key={img.id}
+                                    onPress={() => setSelectedImageUrl(img.imageUrl)}
+                                    style={[styles.thumbnailItem, selectedImageUrl === img.imageUrl && styles.thumbnailSelected]}
+                                >
+                                    <Image source={{ uri: img.imageUrl }} style={styles.thumbnailImage} resizeMode="cover" />
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
                     <View style={styles.headerButtons}>
                         <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
                             <IconButton icon="chevron-left" size={24} iconColor="#1E1E1E" style={{ margin: 0 }} />
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.headerBtn, { padding: 4 }]} onPress={handleToggleFavorite}>
-                            <IconButton icon={isLiked ? "heart" : "heart-outline"} size={22} iconColor={isLiked ? "#FF5252" : "#1E1E1E"} style={{ margin: 0 }} />
+                            <IconButton icon={isLiked ? 'heart' : 'heart-outline'} size={22} iconColor={isLiked ? '#FF5252' : '#1E1E1E'} style={{ margin: 0 }} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -118,104 +170,80 @@ export default function ProductDetailScreen() {
                 <View style={styles.contentSheet}>
                     <View style={styles.titlePriceRow}>
                         <Text style={styles.productTitle}>{product.name}</Text>
-                        <Text style={styles.productPrice}>{formatPrice(product.price)}</Text>
+                        <Text style={styles.productPrice}>{formatPrice(product.basePrice)}</Text>
                     </View>
 
-                    <View style={styles.ratingRow}>
-                        <Text style={styles.starsText}>{'★'.repeat(Math.round(product.rating))}<Text style={{ color: '#E0E0E0' }}>{'★'.repeat(5 - Math.round(product.rating))}</Text></Text>
-                        <Text style={styles.reviewCount}>({product.sold})</Text>
-                    </View>
+                    <Text style={styles.brandText}>{product.brand} · {product.category.name}</Text>
 
+                    {/* Color & Size */}
                     <View style={styles.specificationsRow}>
-                        <View style={styles.specColumn}>
-                            <Text style={styles.specTitle}>Color</Text>
-                            <View style={styles.optionsRow}>
-                                {['#E4CDC0', '#000000', '#EF6D6D'].map(color => (
-                                    <TouchableOpacity
-                                        key={color}
-                                        onPress={() => setSelectedColor(color)}
-                                        style={[
-                                            styles.colorCircle,
-                                            { backgroundColor: color },
-                                            selectedColor === color && styles.colorSelected
-                                        ]}
-                                    />
-                                ))}
+                        {availableColors.length > 0 && (
+                            <View style={styles.specColumn}>
+                                <Text style={styles.specTitle}>Màu sắc</Text>
+                                <View style={styles.optionsRow}>
+                                    {availableColors.map(color => (
+                                        <TouchableOpacity
+                                            key={color.id}
+                                            onPress={() => {
+                                                setSelectedColorId(color.id);
+                                                setSelectedSizeId(null);
+                                            }}
+                                            style={[
+                                                styles.colorCircle,
+                                                { backgroundColor: color.hexCode },
+                                                selectedColorId === color.id && styles.colorSelected,
+                                            ]}
+                                        />
+                                    ))}
+                                </View>
                             </View>
-                        </View>
-                        <View style={styles.specColumn}>
-                            <Text style={styles.specTitle}>Size</Text>
-                            <View style={styles.optionsRow}>
-                                {['S', 'M', 'L'].map(size => (
-                                    <TouchableOpacity
-                                        key={size}
-                                        onPress={() => setSelectedSize(size)}
-                                        style={[styles.sizeCircle, selectedSize === size && styles.sizeCircleSelected]}
-                                    >
-                                        <Text style={[styles.sizeText, selectedSize === size && styles.sizeTextSelected]}>{size}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                        )}
+                        {availableSizes.length > 0 && (
+                            <View style={styles.specColumn}>
+                                <Text style={styles.specTitle}>Size</Text>
+                                <View style={styles.optionsRow}>
+                                    {availableSizes.map(size => (
+                                        <TouchableOpacity
+                                            key={size.id}
+                                            onPress={() => setSelectedSizeId(size.id)}
+                                            style={[styles.sizeCircle, selectedSizeId === size.id && styles.sizeCircleSelected]}
+                                        >
+                                            <Text style={[styles.sizeText, selectedSizeId === size.id && styles.sizeTextSelected]}>{size.name}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
                             </View>
-                        </View>
+                        )}
                     </View>
 
-                    {/* Description Section */}
+                    {selectedVariant !== undefined && (
+                        <Text style={styles.stockText}>
+                            {selectedVariant.stockQuantity > 0
+                                ? `Còn ${selectedVariant.stockQuantity} sản phẩm`
+                                : 'Hết hàng'}
+                        </Text>
+                    )}
+
+                    {/* Description */}
                     <TouchableOpacity style={styles.accordionHeader} onPress={() => setIsDescExpanded(!isDescExpanded)} activeOpacity={0.7}>
-                        <Text style={styles.sectionTitle}>Description</Text>
-                        <IconButton icon={isDescExpanded ? "chevron-up" : "chevron-down"} size={20} style={{ margin: 0 }} />
+                        <Text style={styles.sectionTitle}>Mô tả</Text>
+                        <IconButton icon={isDescExpanded ? 'chevron-up' : 'chevron-down'} size={20} style={{ margin: 0 }} />
                     </TouchableOpacity>
                     {isDescExpanded && (
                         <View style={styles.accordionContent}>
-                            <Text style={styles.descriptionText}>
-                                Đây là phần phân phối chính thức thông qua hệ thống Zola. Sản phẩm này có mã {product.id}, thuộc danh mục {product.categoryId}.
-                                Cam kết hàng chính hãng 100%, bảo hành 12 tháng. Form oversize, bạn có thể cân nhắc giảm một size nhé. <Text style={{ textDecorationLine: 'underline', color: '#1E1E1E' }}>Read more</Text>
-                            </Text>
+                            <Text style={styles.descriptionText}>{product.description}</Text>
                         </View>
                     )}
 
-                    {/* Reviews Section */}
+                    {/* Reviews */}
                     <TouchableOpacity style={[styles.accordionHeader, { marginTop: 16 }]} onPress={() => setIsReviewsExpanded(!isReviewsExpanded)} activeOpacity={0.7}>
-                        <Text style={styles.sectionTitle}>Reviews</Text>
-                        <IconButton icon={isReviewsExpanded ? "chevron-up" : "chevron-down"} size={20} style={{ margin: 0 }} />
+                        <Text style={styles.sectionTitle}>Đánh giá ({reviews.length})</Text>
+                        <IconButton icon={isReviewsExpanded ? 'chevron-up' : 'chevron-down'} size={20} style={{ margin: 0 }} />
                     </TouchableOpacity>
                     {isReviewsExpanded && (
                         <View style={styles.accordionContent}>
-                            <View style={styles.reviewSummaryRow}>
-                                <Text style={styles.bigRatingText}>{product.rating} <Text style={styles.outOf5}>OUT OF 5</Text></Text>
-                                <View style={{ alignItems: 'flex-end' }}>
-                                    <Text style={styles.starsText}>{'★'.repeat(Math.round(product.rating))}<Text style={{ color: '#E0E0E0' }}>{'★'.repeat(5 - Math.round(product.rating))}</Text></Text>
-                                    <Text style={styles.totalReviewsText}>{product.reviews} ratings</Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.ratingBarsContainer}>
-                                {[
-                                    { star: 5, pct: '80%' },
-                                    { star: 4, pct: '12%' },
-                                    { star: 3, pct: '5%' },
-                                    { star: 2, pct: '3%' },
-                                    { star: 1, pct: '0%' },
-                                ].map((b, i) => (
-                                    <View key={i} style={styles.ratingBarRow}>
-                                        <Text style={styles.ratingBarStarText}>{b.star} ★</Text>
-                                        <View style={styles.ratingBarTrack}>
-                                            <View style={[styles.ratingBarFill, { width: b.pct as any }]} />
-                                        </View>
-                                        <Text style={styles.ratingBarPctText}>{b.pct}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                            <View style={styles.reviewControlsRow}>
-                                <Text style={styles.totalReviewsText}>{product.reviews} Reviews</Text>
-                                <TouchableOpacity activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={styles.writeReviewText}>WRITE A REVIEW</Text>
-                                    <IconButton icon="pencil-outline" size={14} style={{ margin: 0, marginLeft: 4, width: 16, height: 16 }} iconColor="#1E1E1E" />
-                                </TouchableOpacity>
-                            </View>
-
                             {reviews.length === 0 ? (
-                                <Text style={{ opacity: 0.6, marginTop: 16 }}>Chưa có đánh giá nào.</Text>
+                                <Text style={{ opacity: 0.6, marginTop: 8 }}>Chưa có đánh giá nào.</Text>
                             ) : (
                                 reviews.map((rev) => (
                                     <View key={rev.id} style={styles.reviewItem}>
@@ -248,11 +276,11 @@ export default function ProductDetailScreen() {
                     buttonColor="#333333"
                     onPress={handleAddToCart}
                     loading={addingToCart}
-                    disabled={addingToCart}
+                    disabled={addingToCart || (selectedVariant !== undefined && selectedVariant.stockQuantity === 0)}
                     icon="cart-outline"
                     labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
                 >
-                    Add To Cart
+                    Thêm vào giỏ
                 </Button>
             </View>
         </View>
@@ -260,272 +288,78 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-    },
-    centerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    scrollContent: {
-        paddingBottom: 24,
-    },
-    imageContainer: {
-        position: 'relative',
-        width: '100%',
-        backgroundColor: '#F7F7F7',
-    },
-    productImage: {
-        width: width,
-        height: width * 1.3,
-    },
-    headerButtons: {
+    container: { flex: 1, backgroundColor: '#FFFFFF' },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scrollContent: { paddingBottom: 24 },
+    imageContainer: { position: 'relative', width: '100%', backgroundColor: '#F7F7F7', paddingBottom: 76 },
+    productImage: { width: width, height: width * 1.1 },
+    thumbnailStrip: {
         position: 'absolute',
-        top: 48,
+        bottom: CONTENT_SHEET_OVERLAP,
         left: 0,
         right: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
+        paddingVertical: 8,
+        backgroundColor: 'rgba(0,0,0,0.25)',
+    },
+    thumbnailItem: { borderRadius: 8, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
+    thumbnailSelected: { borderColor: '#FFFFFF' },
+    thumbnailImage: { width: 60, height: 60 },
+    headerButtons: {
+        position: 'absolute', top: 48, left: 0, right: 0,
+        flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20,
     },
     headerBtn: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        width: 44,
-        height: 44,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 3,
+        backgroundColor: '#FFFFFF', borderRadius: 24,
+        width: 44, height: 44, justifyContent: 'center', alignItems: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1, shadowRadius: 6, elevation: 3,
     },
     contentSheet: {
-        backgroundColor: '#FFFFFF',
-        marginTop: -40,
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
-        paddingHorizontal: 24,
-        paddingTop: 32,
-        paddingBottom: 20,
+        backgroundColor: '#FFFFFF', marginTop: -CONTENT_SHEET_OVERLAP,
+        borderTopLeftRadius: 32, borderTopRightRadius: 32,
+        paddingHorizontal: 24, paddingTop: 32, paddingBottom: 20,
     },
-    titlePriceRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-    },
-    productTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#1E1E1E',
-        flex: 1,
-        marginRight: 16,
-    },
-    productPrice: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#1E1E1E',
-    },
-    ratingRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    starsText: {
-        color: '#439775',
-        fontSize: 14,
-        letterSpacing: 2,
-    },
-    reviewCount: {
-        color: '#8A8A8A',
-        fontSize: 12,
-        marginLeft: 8,
-    },
-    specificationsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 32,
-        marginBottom: 8,
-    },
-    specColumn: {
-        flex: 1,
-    },
-    specTitle: {
-        fontSize: 14,
-        color: '#1E1E1E',
-        marginBottom: 12,
-        fontWeight: '500'
-    },
-    optionsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    colorCircle: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-    },
+    titlePriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    productTitle: { fontSize: 20, fontWeight: 'bold', color: '#1E1E1E', flex: 1, marginRight: 16 },
+    productPrice: { fontSize: 20, fontWeight: 'bold', color: '#1E1E1E' },
+    brandText: { fontSize: 13, color: '#8A8A8A', marginTop: 6, marginBottom: 4 },
+    stockText: { fontSize: 13, color: '#528F72', marginBottom: 8 },
+    specificationsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 24, marginBottom: 8 },
+    specColumn: { flex: 1 },
+    specTitle: { fontSize: 14, color: '#1E1E1E', marginBottom: 12, fontWeight: '500' },
+    optionsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+    colorCircle: { width: 28, height: 28, borderRadius: 14 },
     colorSelected: {
-        borderWidth: 2,
-        borderColor: '#FFFFFF',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+        borderWidth: 2, borderColor: '#FFFFFF',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
     },
     sizeCircle: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#FAFAFA',
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: 36, height: 36, borderRadius: 18,
+        backgroundColor: '#FAFAFA', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 1, borderColor: '#E0E0E0',
     },
-    sizeCircleSelected: {
-        backgroundColor: '#333333',
-    },
-    sizeText: {
-        fontSize: 14,
-        color: '#8A8A8A',
-        fontWeight: '600',
-    },
-    sizeTextSelected: {
-        color: '#FFFFFF',
-    },
+    sizeCircleSelected: { backgroundColor: '#333333', borderColor: '#333333' },
+    sizeText: { fontSize: 13, color: '#8A8A8A', fontWeight: '600' },
+    sizeTextSelected: { color: '#FFFFFF' },
     accordionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#1E1E1E',
-    },
-    accordionContent: {
-        paddingTop: 16,
-    },
-    descriptionText: {
-        fontSize: 14,
-        color: '#8A8A8A',
-        lineHeight: 22,
-    },
-    reviewSummaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 20,
-    },
-    bigRatingText: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#1E1E1E',
-    },
-    outOf5: {
-        fontSize: 10,
-        color: '#8A8A8A',
-        fontWeight: 'normal',
-    },
-    totalReviewsText: {
-        fontSize: 10,
-        color: '#8A8A8A',
-        textAlign: 'right',
-        marginTop: 4,
-    },
-    ratingBarsContainer: {
-        marginBottom: 24,
-    },
-    ratingBarRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    ratingBarStarText: {
-        width: 24,
-        fontSize: 12,
-        color: '#439775',
-    },
-    ratingBarTrack: {
-        flex: 1,
-        height: 4,
-        backgroundColor: '#F0F0F0',
-        borderRadius: 2,
-        marginHorizontal: 12,
-    },
-    ratingBarFill: {
-        height: '100%',
-        backgroundColor: '#439775',
-        borderRadius: 2,
-    },
-    ratingBarPctText: {
-        width: 32,
-        fontSize: 12,
-        color: '#8A8A8A',
-        textAlign: 'right',
-    },
-    reviewControlsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    writeReviewText: {
-        fontSize: 12,
-        color: '#1E1E1E',
-        fontWeight: 'bold',
-        letterSpacing: 0.5,
-    },
-    reviewItem: {
-        marginBottom: 24,
-    },
-    reviewItemHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    reviewAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-    },
-    reviewUserName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#1E1E1E',
-        marginBottom: 2,
-    },
-    reviewStars: {
-        fontSize: 12,
-        color: '#439775',
-    },
-    reviewTimeText: {
-        fontSize: 12,
-        color: '#C0C0C0',
-    },
-    reviewCommentText: {
-        fontSize: 14,
-        color: '#666666',
-        lineHeight: 20,
-    },
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1E1E1E' },
+    accordionContent: { paddingTop: 16 },
+    descriptionText: { fontSize: 14, color: '#8A8A8A', lineHeight: 22 },
+    reviewItem: { marginBottom: 24 },
+    reviewItemHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+    reviewAvatar: { width: 40, height: 40, borderRadius: 20 },
+    reviewUserName: { fontSize: 14, fontWeight: 'bold', color: '#1E1E1E', marginBottom: 2 },
+    reviewStars: { fontSize: 12, color: '#439775' },
+    reviewTimeText: { fontSize: 12, color: '#C0C0C0' },
+    reviewCommentText: { fontSize: 14, color: '#666666', lineHeight: 20 },
     bottomBar: {
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 24,
-        paddingTop: 12,
-        paddingBottom: 24,
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
+        backgroundColor: '#FFFFFF', paddingHorizontal: 24,
+        paddingTop: 12, paddingBottom: 24,
+        borderTopWidth: 1, borderTopColor: '#F0F0F0',
     },
-    addToCartBtn: {
-        borderRadius: 30,
-        elevation: 0,
-        paddingVertical: 4,
-    }
+    addToCartBtn: { borderRadius: 30, elevation: 0, paddingVertical: 4 },
 });

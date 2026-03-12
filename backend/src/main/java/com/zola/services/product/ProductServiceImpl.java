@@ -158,6 +158,7 @@ public class ProductServiceImpl implements ProductService {
                 .id(product.getCategory().getId())
                 .name(product.getCategory().getName())
                 .description(product.getCategory().getDescription())
+                .imageUrl(product.getCategory().getImageUrl())
                 .build();
 
         List<ProductImageResponse> imageResponses = product.getImages().stream().map(img ->
