@@ -1,5 +1,6 @@
 package com.zola.entity;
 
+import com.zola.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -29,8 +30,12 @@ public class Product {
     @Column(name = "base_price", nullable = false)
     BigDecimal basePrice;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    String status; // e.g., ACTIVE, OUT_OF_STOCK, ARCHIVED
+    ProductStatus status;
+
+    @Column(name = "brand")
+    String brand;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

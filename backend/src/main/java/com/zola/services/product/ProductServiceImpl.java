@@ -1,9 +1,9 @@
 package com.zola.services.product;
 
 import com.zola.dto.request.product.ProductRequest;
-import com.zola.dto.request.product.ProductVariantRequest;
 import com.zola.dto.response.product.*; import com.zola.dto.response.category.*; import com.zola.dto.response.attribute.*;
 import com.zola.entity.*;
+import com.zola.enums.ProductStatus;
 import com.zola.repository.*;
 import com.zola.services.cloudinary.CloudinaryService;
 import lombok.AccessLevel;
@@ -40,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .basePrice(request.getBasePrice())
-                .status(request.getStatus() != null ? request.getStatus() : "ACTIVE")
+                .status(request.getStatus() != null ? ProductStatus.valueOf(request.getStatus()) : ProductStatus.ACTIVE)
                 .category(category)
                 .build();
 
@@ -113,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setBasePrice(request.getBasePrice());
-        product.setStatus(request.getStatus());
+        product.setStatus(request.getStatus() != null ? ProductStatus.valueOf(request.getStatus()) : ProductStatus.ACTIVE);
         product.setCategory(category);
 
         productVariantRepository.deleteAll(product.getVariants());
@@ -185,7 +185,7 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .description(product.getDescription())
                 .basePrice(product.getBasePrice())
-                .status(product.getStatus())
+                .status(product.getStatus() != null ? product.getStatus().name() : null)
                 .category(categoryResponse)
                 .images(imageResponses)
                 .variants(variantResponses)

@@ -1,0 +1,9 @@
+[
+  { "name": "Áo Thun",           "description": "Các loại áo thun basic và graphic" },
+  { "name": "Áo Sơ Mi",          "description": "Áo sơ mi công sở, casual" },
+  { "name": "Quần",               "description": "Quần jean, kaki, short" },
+  { "name": "Áo Khoác (Jackets)", "description": "Áo khoác gió, hoodie, blazer" },
+  { "name": "Giày Dép",           "description": "Giày sneaker, sandal, dép thời trang" },
+  { "name": "Mũ",                 "description": "Mũ lưỡi trai, nón bucket, mũ len" },
+  { "name": "Trang Sức",          "description": "Nhẫn, dây chuyền, vòng tay, bông tai" }
+]
