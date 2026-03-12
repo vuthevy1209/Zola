@@ -11,6 +11,7 @@ import com.zola.exception.AppException;
 import com.zola.exception.ErrorCode;
 import com.zola.mapper.UserMapper;
 import com.zola.repository.UserRepository;
+import com.zola.services.cloudinary.CloudinaryService;
 import com.zola.services.otp.OtpService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     OtpService otpService;
-    com.zola.services.cloudinary.CloudinaryService cloudinaryService;
+    CloudinaryService cloudinaryService;
 
     @Override
     public UserProfileResponse getMyProfile() {

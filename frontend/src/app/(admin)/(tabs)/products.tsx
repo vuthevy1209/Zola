@@ -1,26 +1,41 @@
 import { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, Alert, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, FlatList, Alert, Image, ActivityIndicator } from 'react-native';
 import { Text, useTheme, FAB, Searchbar, Chip, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { adminProductService } from '@/services/admin.service';
-import { Product } from '@/services/product.service';
+import { Product, getProducts, deleteProduct } from '@/services/products/product-service';
+import { Category, getCategories } from '@/services/attributes/attribute-service';
 
 export default function AdminProducts() {
     const theme = useTheme();
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const [prods, cats] = await Promise.all([getProducts(), getCategories()]);
+            setProducts(prods);
+            setCategories(cats);
+        } catch (error) {
+            console.error('Failed to load products', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useFocusEffect(useCallback(() => {
-        setProducts(adminProductService.getAll());
+        loadData();
     }, []));
 
     const filtered = products.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleDelete = (id: string, name: string) => {
+    const handleDelete = (id: number, name: string) => {
         Alert.alert(
             'Xóa sản phẩm',
             `Bạn có chắc muốn xóa "${name.slice(0, 40)}..."?`,
@@ -28,45 +43,54 @@ export default function AdminProducts() {
                 { text: 'Hủy', style: 'cancel' },
                 {
                     text: 'Xóa', style: 'destructive',
-                    onPress: () => {
-                        adminProductService.delete(id);
-                        setProducts(adminProductService.getAll());
+                    onPress: async () => {
+                        try {
+                            await deleteProduct(id);
+                            loadData();
+                        } catch (error) {
+                            Alert.alert('Lỗi', 'Không thể xóa sản phẩm này');
+                        }
                     }
                 },
             ]
         );
     };
 
-    const renderItem = ({ item }: { item: Product }) => (
-        <View style={styles.row}>
-            <Image source={{ uri: item.image }} style={styles.img} />
-            <View style={styles.info}>
-                <Text variant="bodyMedium" numberOfLines={2} style={{ fontWeight: '600' }}>{item.name}</Text>
-                <Text variant="bodySmall" style={{ color: '#528F72', marginTop: 2 }}>
-                    {item.price.toLocaleString('vi-VN')}đ
-                </Text>
-                <View style={styles.meta}>
-                    <Chip compact icon="tag-outline" style={styles.chip} textStyle={{ fontSize: 11 }}>
-                        {adminProductService.getCategories().find(c => c.id === item.categoryId)?.name ?? '—'}
-                    </Chip>
-                    <Text variant="bodySmall" style={styles.soldText}>Đã bán: {item.sold}</Text>
+    const renderItem = ({ item }: { item: Product }) => {
+        const primaryImage = item.images?.find(img => img.isPrimary)?.imageUrl || item.images?.[0]?.imageUrl;
+        const totalStock = item.variants?.reduce((sum, v) => sum + v.stockQuantity, 0) || 0;
+
+        return (
+            <View style={styles.row}>
+                <Image source={{ uri: primaryImage || 'https://via.placeholder.com/150' }} style={styles.img} />
+                <View style={styles.info}>
+                    <Text variant="bodyMedium" numberOfLines={2} style={{ fontWeight: '600' }}>{item.name}</Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.primary, marginTop: 2 }}>
+                        {item.basePrice.toLocaleString('vi-VN')}đ
+                    </Text>
+                    <View style={styles.meta}>
+                        <Chip compact icon="tag-outline" style={styles.chip} textStyle={{ fontSize: 11 }}>
+                            {item.category?.name || '—'}
+                        </Chip>
+                        <Text variant="bodySmall" style={styles.soldText}>Tồn: {totalStock}</Text>
+                    </View>
+                </View>
+                <View style={styles.actions}>
+                    <IconButton
+                        icon="pencil-outline"
+                        size={20}
+                        onPress={() => router.push({ pathname: '/(admin)/product-form', params: { id: item.id } })}
+                    />
+                    <IconButton
+                        icon="trash-can-outline"
+                        size={20}
+                        iconColor="#EF4444"
+                        onPress={() => handleDelete(item.id, item.name)}
+                    />
                 </View>
             </View>
-            <View style={styles.actions}>
-                <IconButton
-                    icon="pencil-outline"
-                    size={20}
-                    onPress={() => router.push({ pathname: '/(admin)/product-form', params: { id: item.id } })}
-                />
-                <IconButton
-                    icon="trash-can-outline"
-                    size={20}
-                    iconColor="#EF4444"
-                    onPress={() => handleDelete(item.id, item.name)}
-                />
-            </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -79,13 +103,17 @@ export default function AdminProducts() {
                     style={styles.search}
                 />
                 <Text variant="bodySmall" style={styles.count}>{filtered.length} sản phẩm</Text>
-                <FlatList
-                    data={filtered}
-                    keyExtractor={item => item.id}
-                    renderItem={renderItem}
-                    ItemSeparatorComponent={() => <View style={styles.separator} />}
-                    showsVerticalScrollIndicator={false}
-                />
+                {loading ? (
+                    <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 20 }} />
+                ) : (
+                    <FlatList
+                        data={filtered}
+                        keyExtractor={item => item.id.toString()}
+                        renderItem={renderItem}
+                        ItemSeparatorComponent={() => <View style={styles.separator} />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )}
             </View>
             <FAB
                 icon="plus"

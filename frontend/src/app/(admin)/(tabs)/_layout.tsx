@@ -35,6 +35,13 @@ export default function AdminTabsLayout() {
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="star-outline" size={24} color={color} />,
                 }}
             />
+            <Tabs.Screen
+                name="attributes"
+                options={{
+                    title: 'Phân loại',
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="tag-multiple-outline" size={24} color={color} />,
+                }}
+            />
         </Tabs>
     );
 }
