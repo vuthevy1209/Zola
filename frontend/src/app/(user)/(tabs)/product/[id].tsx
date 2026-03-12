@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFFFFF' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scrollContent: { paddingBottom: 24 },
-    imageContainer: { position: 'relative', width: '100%', backgroundColor: '#F7F7F7', paddingBottom: 76 },
+    imageContainer: { position: 'relative', width: '100%', backgroundColor: '#F7F7F7' },
     productImage: { width: width, height: width * 1.1 },
     thumbnailStrip: {
         position: 'absolute',
@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
     },
     contentSheet: {
         backgroundColor: '#FFFFFF', marginTop: -CONTENT_SHEET_OVERLAP,
-        borderTopLeftRadius: 32, borderTopRightRadius: 32,
         paddingHorizontal: 24, paddingTop: 32, paddingBottom: 20,
     },
     titlePriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
