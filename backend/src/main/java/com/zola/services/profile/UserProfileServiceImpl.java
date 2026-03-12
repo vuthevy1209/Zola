@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     OtpService otpService;
-    Cloudinary cloudinary;
+    com.zola.services.cloudinary.CloudinaryService cloudinaryService;
 
     @Override
     public UserProfileResponse getMyProfile() {
@@ -144,18 +143,8 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> result = cloudinary.uploader().upload(
-                    file.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "zola/avatars",
-                            "public_id", "avatar_" + userId,
-                            "overwrite", true,
-                            "resource_type", "image"
-                    )
-            );
-
-            String secureUrl = (String) result.get("secure_url");
+            String secureUrl = cloudinaryService.uploadImage(file, "zola/avatars", "avatar_" + userId);
+            
             user.setAvatarUrl(secureUrl);
             userRepository.save(user);
             return secureUrl;
