@@ -9,6 +9,8 @@ import com.zola.services.cloudinary.CloudinaryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,6 +94,12 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductResponse> getProductsPaged(int page, int size) {
+        return productRepository.findAll(PageRequest.of(page, size))
+                .map(this::mapToResponse);
     }
 
     @Override
@@ -186,6 +194,7 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .basePrice(product.getBasePrice())
                 .status(product.getStatus() != null ? product.getStatus().name() : null)
+                .brand(product.getBrand())
                 .category(categoryResponse)
                 .images(imageResponses)
                 .variants(variantResponses)

@@ -1,8 +1,6 @@
 package com.zola.dto.response.product;
 
 import com.zola.dto.response.category.CategoryResponse;
-import com.zola.dto.response.attribute.SizeResponse;
-import com.zola.dto.response.attribute.ColorResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,6 +19,7 @@ public class ProductResponse {
     String description;
     BigDecimal basePrice;
     String status;
+    String brand;
     CategoryResponse category;
     List<ProductImageResponse> images;
     List<ProductVariantResponse> variants;

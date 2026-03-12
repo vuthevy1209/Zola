@@ -1,91 +1,89 @@
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import api from './api';
+
+export interface ProductImage {
+    id: number;
+    imageUrl: string;
+    isPrimary: boolean;
+}
 
 export interface Category {
-    id: string;
+    id: number;
     name: string;
-    icon: string;
-    image: string;
+    description?: string;
+    icon?: string;
+}
+
+// TODO: replace with real API once backend supports category icons
+export const mockCategories: Category[] = [
+    { id: 1, name: 'Điện thoại', icon: 'cellphone' },
+    { id: 2, name: 'Laptop', icon: 'laptop' },
+    { id: 3, name: 'Đồng hồ', icon: 'watch' },
+    { id: 4, name: 'Tai nghe', icon: 'headphones' },
+    { id: 5, name: 'Phụ kiện', icon: 'cable-data' },
+    { id: 6, name: 'Tivi', icon: 'television' },
+    { id: 7, name: 'Áo Thun', icon: 'tshirt-crew' },
+    { id: 8, name: 'Giày Dép', icon: 'shoe-heel' },
+    { id: 9, name: 'Mũ', icon: 'hat-fedora' },
+    { id: 10, name: 'Trang Sức', icon: 'diamond' },
+];
+
+export interface ProductVariant {
+    id: number;
+    size?: { id: number; name: string };
+    color?: { id: number; name: string; hexCode: string };
+    stockQuantity: number;
 }
 
 export interface Product {
     id: string;
     name: string;
-    price: number;
-    originalPrice?: number;
-    discountRate?: number;
-    sold: number;
-    rating: number;
-    reviews: number;
-    image: string;
-    categoryId: string;
+    description: string;
+    basePrice: number;
+    status: string;
+    brand: string;
+    category: Category;
+    images: ProductImage[];
+    variants: ProductVariant[];
 }
 
-export const mockCategories: Category[] = [
-    { id: '1', name: 'Điện thoại', icon: 'cellphone', image: 'https://picsum.photos/id/1/200/200' },
-    { id: '2', name: 'Laptop', icon: 'laptop', image: 'https://picsum.photos/id/2/200/200' },
-    { id: '3', name: 'Đồng hồ', icon: 'watch', image: 'https://picsum.photos/id/3/200/200' },
-    { id: '4', name: 'Tai nghe', icon: 'headphones', image: 'https://picsum.photos/id/4/200/200' },
-    { id: '5', name: 'Phụ kiện', icon: 'cable-data', image: 'https://picsum.photos/id/5/200/200' },
-    { id: '6', name: 'Tivi', icon: 'television', image: 'https://picsum.photos/id/6/200/200' },
-];
+const CATEGORY_ICONS: Record<string, string> = {
+    'Áo Thun': 'tshirt-crew',
+    'Áo Sơ Mi': 'shirt',
+    'Quần': 'hanger',
+    'Áo Khoác (Jackets)': 'coat-rack',
+    'Giày Dép': 'shoe-heel',
+    'Mũ': 'hat-fedora',
+    'Trang Sức': 'diamond',
+};
 
-// Generate 40 products
-export const mockProducts: Product[] = Array.from({ length: 40 }).map((_, idx) => {
-    const price = Math.floor(Math.random() * 20000000) + 1000000;
-    const isDiscounted = Math.random() > 0.5;
-    const discountRate = isDiscounted ? Math.floor(Math.random() * 50) + 5 : 0;
+export const getCategoryIcon = (cat: Category): string =>
+    cat.icon ?? CATEGORY_ICONS[cat.name] ?? 'tag';
 
-    return {
-        id: `prod_${idx + 1}`,
-        name: `Sản phẩm mẫu điện tử cao cấp ${idx + 1} chính hãng bảo hành 12 tháng`,
-        price: price,
-        originalPrice: isDiscounted ? Math.floor(price / (1 - discountRate / 100)) : undefined,
-        discountRate: isDiscounted ? discountRate : undefined,
-        sold: Math.floor(Math.random() * 5000),
-        rating: (Math.random() * 2 + 3).toFixed(1) as any,
-        reviews: Math.floor(Math.random() * 1000),
-        image: `https://picsum.photos/id/${(idx % 50) + 10}/400/400`,
-        categoryId: mockCategories[idx % mockCategories.length].id,
-    }
-}).sort((a, b) => (b.discountRate || 0) - (a.discountRate || 0)); // Sort by discount high to low as requested
+export const getProductImage = (product: Product): string | undefined =>
+    product.images?.find(img => img.isPrimary)?.imageUrl ?? product.images?.[0]?.imageUrl;
 
+export interface PagedResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    last: boolean;
+}
 
 export const productService = {
-    async getCategories(): Promise<Category[]> {
-        await delay(600);
+    getCategories(): Category[] {
+        // TODO: switch to api.get('/categories') once backend supports icons
         return mockCategories;
     },
 
-    async getHotProducts(): Promise<Product[]> {
-        await delay(800);
-        // Return top 10 best selling
-        return [...mockProducts].sort((a, b) => b.sold - a.sold).slice(0, 10);
+    async getProducts(page = 0, size = 10): Promise<PagedResponse<Product>> {
+        const response = await api.get('/products', { params: { page, size } });
+        return response.data.result;
     },
 
-    async getProducts(page = 1, limit = 10, categoryId?: string): Promise<{ data: Product[], total: number }> {
-        await delay(1000);
-        let filtered = mockProducts;
-        if (categoryId) {
-            filtered = filtered.filter(p => p.categoryId === categoryId);
-        }
-
-        const start = (page - 1) * limit;
-        const end = start + limit;
-
-        return {
-            data: filtered.slice(start, end),
-            total: filtered.length
-        };
+    async getProductById(id: string): Promise<Product> {
+        const response = await api.get(`/products/${id}`);
+        return response.data.result;
     },
-
-    async getProductDetail(id: string): Promise<Product | null> {
-        await delay(500);
-        return mockProducts.find(p => p.id === id) || null;
-    },
-
-    async searchProducts(query: string): Promise<Product[]> {
-        await delay(800);
-        const lowerQuery = query.toLowerCase();
-        return mockProducts.filter(p => p.name.toLowerCase().includes(lowerQuery));
-    }
 };

@@ -1,10 +1,9 @@
-import { mockProducts, mockCategories, Product, Category } from './product.service';
+import { Product, Category, mockCategories } from './product.service';
 import { Order, OrderStatus } from './order.service';
-import { mockProducts as mp } from './product.service';
 
 // ─── Products ────────────────────────────────────────────────────────────────
 
-let adminProducts: Product[] = [...mockProducts];
+let adminProducts: Product[] = [];
 
 export const adminProductService = {
     getAll(): Product[] {
@@ -15,13 +14,10 @@ export const adminProductService = {
         return adminProducts.find(p => p.id === id);
     },
 
-    create(data: Omit<Product, 'id' | 'sold' | 'rating' | 'reviews'>): Product {
+    create(data: Omit<Product, 'id'>): Product {
         const newProduct: Product = {
             ...data,
             id: `prod_${Date.now()}`,
-            sold: 0,
-            rating: 0,
-            reviews: 0,
         };
         adminProducts = [newProduct, ...adminProducts];
         return newProduct;
@@ -68,9 +64,7 @@ const addresses = [
 ];
 
 let adminOrders: AdminOrder[] = Array.from({ length: 18 }).map((_, i) => {
-    const p1 = mp[i % mp.length];
-    const p2 = mp[(i + 3) % mp.length];
-    const total = p1.price + p2.price * 2;
+    const total = (i + 1) * 150000;
     const created = new Date(Date.now() - i * 3600000 * 6).toISOString();
 
     return {
@@ -78,10 +72,7 @@ let adminOrders: AdminOrder[] = Array.from({ length: 18 }).map((_, i) => {
         customerName: names[i % names.length],
         customerPhone: phones[i % phones.length],
         address: addresses[i % addresses.length],
-        items: [
-            { product: p1, quantity: 1 },
-            { product: p2, quantity: 2 },
-        ],
+        items: [],
         total,
         status: statusList[i % statusList.length],
         createdAt: created,
@@ -130,20 +121,17 @@ const comments = [
     'Shop tư vấn nhiệt tình, sẽ ủng hộ dài dài.',
 ];
 
-export let adminFeedbacks: AdminFeedback[] = Array.from({ length: 15 }).map((_, i) => {
-    const product = mp[i % mp.length];
-    return {
-        id: `fb_${i + 1}`,
-        productId: product.id,
-        productName: product.name,
-        productImage: product.image,
-        customerName: names[i % names.length],
-        rating: (i % 5) + 1,
-        comment: comments[i % comments.length],
-        createdAt: new Date(Date.now() - i * 3600000 * 10).toISOString(),
-        isHidden: false,
-    };
-});
+export let adminFeedbacks: AdminFeedback[] = Array.from({ length: 15 }).map((_, i) => ({
+    id: `fb_${i + 1}`,
+    productId: `prod_${(i % 10) + 1}`,
+    productName: `Sản phẩm ${(i % 10) + 1}`,
+    productImage: `https://picsum.photos/id/${(i % 50) + 10}/200/200`,
+    customerName: names[i % names.length],
+    rating: (i % 5) + 1,
+    comment: comments[i % comments.length],
+    createdAt: new Date(Date.now() - i * 3600000 * 10).toISOString(),
+    isHidden: false,
+}));
 
 export const adminFeedbackService = {
     getAll(): AdminFeedback[] {

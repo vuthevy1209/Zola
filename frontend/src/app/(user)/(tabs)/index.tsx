@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, useTheme, Card, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Text, useTheme, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { productService, Category, Product } from '@/services/product.service';
+import { productService, Category, Product, getCategoryIcon, getProductImage } from '@/services/product.service';
 
 
 const { width } = Dimensions.get('window');
@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
@@ -32,15 +32,12 @@ export default function HomeScreen() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const [cats, hot, prods] = await Promise.all([
-        productService.getCategories(),
-        productService.getHotProducts(),
-        productService.getProducts(1, 10)
-      ]);
-      setCategories(cats);
-      setHotProducts(hot);
-      setProducts(prods.data);
-      if (prods.data.length >= prods.total) setHasMore(false);
+      const prods = await productService.getProducts(0);
+      setCategories(productService.getCategories());
+      setProducts(prods.content);
+      setHotProducts(prods.content.slice(0, 5));
+      setHasMore(!prods.last);
+      setPage(0);
     } catch (error) {
       console.error(error);
     } finally {
@@ -53,12 +50,10 @@ export default function HomeScreen() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const res = await productService.getProducts(nextPage, 10);
-      setProducts(prev => [...prev, ...res.data]);
+      const res = await productService.getProducts(nextPage);
+      setProducts(prev => [...prev, ...res.content]);
       setPage(nextPage);
-      if (products.length + res.data.length >= res.total) {
-        setHasMore(false);
-      }
+      setHasMore(!res.last);
     } catch (error) {
       console.error(error);
     } finally {
@@ -76,21 +71,13 @@ export default function HomeScreen() {
       onPress={() => router.push(`/product/${item.id}`)}
       activeOpacity={0.8}
     >
-      <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="cover" />
+      <Image source={{ uri: getProductImage(item) }} style={styles.productImage} resizeMode="cover" />
       <View style={styles.productContent}>
         <Text numberOfLines={2} style={styles.productName}>{item.name}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
-          {item.discountRate && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>-{item.discountRate}%</Text>
-            </View>
-          )}
+          <Text style={styles.priceText}>{formatPrice(item.basePrice)}</Text>
         </View>
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>⭐ {item.rating}</Text>
-          <Text style={styles.statsText}>Đã bán {item.sold}</Text>
-        </View>
+        <Text numberOfLines={1} style={styles.statsText}>{item.brand}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -125,7 +112,7 @@ export default function HomeScreen() {
         {categories.map((cat) => (
           <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => { }}>
             <View style={[styles.categoryIconWrap, { backgroundColor: theme.colors.primaryContainer }]}>
-              <IconButton icon={cat.icon} iconColor={theme.colors.primary} size={28} />
+              <IconButton icon={getCategoryIcon(cat)} iconColor={theme.colors.primary} size={28} />
             </View>
             <Text variant="bodySmall" style={styles.categoryName}>{cat.name}</Text>
           </TouchableOpacity>
@@ -144,9 +131,9 @@ export default function HomeScreen() {
             style={styles.hotProductCard}
             onPress={() => router.push(`/product/${prod.id}`)}
           >
-            <Image source={{ uri: prod.image }} style={styles.hotProductImage} />
+            <Image source={{ uri: getProductImage(prod) }} style={styles.hotProductImage} />
             <Text numberOfLines={1} style={styles.hotProductName}>{prod.name}</Text>
-            <Text style={{ color: theme.colors.error, fontWeight: 'bold' }}>{formatPrice(prod.price)}</Text>
+            <Text style={{ color: theme.colors.error, fontWeight: 'bold' }}>{formatPrice(prod.basePrice)}</Text>
           </TouchableOpacity>
         ))}
         <View style={{ width: 16 }} />
