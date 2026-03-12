@@ -115,6 +115,7 @@ public class ApplicationInitConfig {
                 loadJson("seed/categories.json").forEach(c -> categoryRepository.save(Category.builder()
                         .name((String) c.get("name"))
                         .description((String) c.get("description"))
+                        .imageUrl((String) c.get("imageUrl"))
                         .build()));
             }
 

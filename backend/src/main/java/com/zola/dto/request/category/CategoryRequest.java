@@ -15,4 +15,6 @@ public class CategoryRequest {
     String name;
 
     String description;
+
+    String imageUrl;
 }

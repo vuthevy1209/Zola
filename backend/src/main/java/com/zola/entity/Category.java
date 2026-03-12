@@ -21,4 +21,7 @@ public class Category {
 
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
+
+    @Column(name = "image_url", nullable = false)
+    String imageUrl;
 }

@@ -1,13 +1,14 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRootNavigationState } from 'expo-router';
+import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { useEffect } from 'react';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { View } from 'react-native';
+import { Provider as PaperProvider, MD3LightTheme, Text } from 'react-native-paper';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { RealmProvider } from '@/storage/realm';
 
 
@@ -37,6 +38,34 @@ const customPaperTheme = {
         },
     },
 };
+
+function AppContent() {
+    const { isLoading, user } = useAuth();
+    const segments = useSegments();
+
+    const isAdmin = user?.role === 'ADMIN';
+    const isNavigationCorrect =
+        (!user && segments[0] === '(auth)') ||
+        (!!isAdmin && segments[0] === '(admin)') ||
+        (!isAdmin && !!user && segments[0] === '(user)');
+
+    const showLoader = isLoading || !isNavigationCorrect;
+
+    return (
+        <>
+            <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(user)" options={{ headerShown: false }} />
+                <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+            </Stack>
+            {showLoader && (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 48, fontWeight: 'bold', color: '#528F72', letterSpacing: 2 }}>Zola</Text>
+                </View>
+            )}
+        </>
+    );
+}
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -72,11 +101,7 @@ export default function RootLayout() {
             <PaperProvider theme={customPaperTheme}>
                 <RealmProvider>
                     <AuthProvider>
-                        <Stack>
-                            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                            <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                        </Stack>
+                        <AppContent />
                     </AuthProvider>
                 </RealmProvider>
             </PaperProvider>

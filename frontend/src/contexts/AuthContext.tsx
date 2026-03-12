@@ -54,7 +54,9 @@ function useProtectedRoute(user: UserProfile | null, isLoading: boolean) {
 export function AuthProvider({ children }: { children: ReactNode }) {
     const realm = useRealm();
     const realmUser = useQuery(RealmUserProfile)[0]; // Realm is reactive, this updates automatically
-    const [isLoading, setIsLoading] = useState(true);
+    const [tokenChecked, setTokenChecked] = useState(false);
+    const [realmChecked, setRealmChecked] = useState(false);
+    const isLoading = !tokenChecked || !realmChecked;
     const [user, setUser] = useState<UserProfile | null>(null);
 
     // Sync realm user to local state for easier consumption
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
             setUser(null);
         }
+        setRealmChecked(true);
     }, [realmUser]);
 
     useEffect(() => {
@@ -86,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch (error) {
                 console.error('Failed to load session:', error);
             } finally {
-                setIsLoading(false);
+                setTokenChecked(true);
             }
         };
 

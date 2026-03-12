@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { productService, Category, Product, getCategoryIcon, getProductImage } from '@/services/product.service';
+import { productService, Category, Product, getProductPrimaryImage } from '@/services/product.service';
 
 
 const { width } = Dimensions.get('window');
@@ -33,7 +33,7 @@ export default function HomeScreen() {
     setLoading(true);
     try {
       const prods = await productService.getProducts(0);
-      setCategories(productService.getCategories());
+      setCategories(await productService.getCategories());
       setProducts(prods.content);
       setHotProducts(prods.content.slice(0, 5));
       setHasMore(!prods.last);
@@ -71,7 +71,7 @@ export default function HomeScreen() {
       onPress={() => router.push(`/product/${item.id}`)}
       activeOpacity={0.8}
     >
-      <Image source={{ uri: getProductImage(item) }} style={styles.productImage} resizeMode="cover" />
+      <Image source={{ uri: getProductPrimaryImage(item) }} style={styles.productImage} resizeMode="cover" />
       <View style={styles.productContent}>
         <Text numberOfLines={2} style={styles.productName}>{item.name}</Text>
         <View style={styles.priceContainer}>
@@ -111,8 +111,8 @@ export default function HomeScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
         {categories.map((cat) => (
           <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => { }}>
-            <View style={[styles.categoryIconWrap, { backgroundColor: theme.colors.primaryContainer }]}>
-              <IconButton icon={getCategoryIcon(cat)} iconColor={theme.colors.primary} size={28} />
+            <View style={styles.categoryIconWrap}>
+              <Image source={{ uri: cat?.imageUrl }} style={styles.categoryImage} resizeMode="cover" />
             </View>
             <Text variant="bodySmall" style={styles.categoryName}>{cat.name}</Text>
           </TouchableOpacity>
@@ -131,7 +131,7 @@ export default function HomeScreen() {
             style={styles.hotProductCard}
             onPress={() => router.push(`/product/${prod.id}`)}
           >
-            <Image source={{ uri: getProductImage(prod) }} style={styles.hotProductImage} />
+            <Image source={{ uri: getProductPrimaryImage(prod) }} style={styles.hotProductImage} />
             <Text numberOfLines={1} style={styles.hotProductName}>{prod.name}</Text>
             <Text style={{ color: theme.colors.error, fontWeight: 'bold' }}>{formatPrice(prod.basePrice)}</Text>
           </TouchableOpacity>
@@ -221,12 +221,15 @@ const styles = StyleSheet.create({
     width: 70,
   },
   categoryIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    overflow: 'hidden',
     marginBottom: 8,
+  },
+  categoryImage: {
+    width: 60,
+    height: 60,
   },
   categoryName: {
     textAlign: 'center',
