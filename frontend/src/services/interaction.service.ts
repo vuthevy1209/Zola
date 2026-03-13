@@ -1,5 +1,5 @@
 import api from './api';
-import { Product } from './product.service';
+import { Product, PagedResponse } from './product.service';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -33,12 +33,19 @@ export const interactionService = {
         return true;
     },
 
-    async getFavorites(): Promise<Product[]> {
+    async getFavorites(page = 0, size = 10): Promise<PagedResponse<Product>> {
         try {
-            const response = await api.get('/favorite-products');
+            const response = await api.get('/favorite-products', { params: { page, size } });
             return response.data.result;
         } catch {
-            return [];
+            return {
+                content: [],
+                totalElements: 0,
+                totalPages: 0,
+                size: 10,
+                number: 0,
+                last: true
+            };
         }
     },
 

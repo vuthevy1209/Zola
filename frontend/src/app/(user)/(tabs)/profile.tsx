@@ -63,6 +63,16 @@ export default function ProfileScreen() {
                     <Divider style={styles.divider} />
 
                     <List.Item
+                        title="Sản phẩm yêu thích"
+                        titleStyle={styles.listItemTitle}
+                        left={(props) => <MaterialCommunityIcons name="heart-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}
+                        right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" style={styles.listChevron} />}
+                        onPress={() => router.push('/favorites')}
+                        style={styles.listItem}
+                    />
+                    <Divider style={styles.divider} />
+
+                    <List.Item
                         title="Đổi mật khẩu"
                         titleStyle={styles.listItemTitle}
                         left={(props) => <MaterialCommunityIcons name="key-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}

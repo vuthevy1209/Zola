@@ -1,7 +1,9 @@
 package com.zola.services.product;
 
+import com.zola.converters.ProductConverter;
+
 import com.zola.dto.request.product.ProductRequest;
-import com.zola.dto.response.product.*; import com.zola.dto.response.category.*; import com.zola.dto.response.attribute.*;
+import com.zola.dto.response.product.ProductResponse;
 import com.zola.entity.*;
 import com.zola.enums.ProductStatus;
 import com.zola.repository.*;
@@ -33,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
     SearchHistoryService searchHistoryService;
     ProductVariantRepository productVariantRepository;
     ProductImageRepository productImageRepository;
+    ProductConverter productConverter;
 
     @Override
     @Transactional
@@ -66,7 +69,7 @@ public class ProductServiceImpl implements ProductService {
             savedProduct.setVariants(variants);
         }
 
-        return mapToResponse(savedProduct);
+        return productConverter.toProductResponse(savedProduct);
     }
 
     @Override
@@ -88,26 +91,26 @@ public class ProductServiceImpl implements ProductService {
             isFirst = false;
         }
 
-        return mapToResponse(productRepository.save(product));
+        return productConverter.toProductResponse(productRepository.save(product));
     }
 
     @Override
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(productConverter::toProductResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Page<ProductResponse> getProductsPaged(int page, int size) {
         return productRepository.findAll(PageRequest.of(page, size))
-                .map(this::mapToResponse);
+                .map(productConverter::toProductResponse);
     }
 
     @Override
     public Page<ProductResponse> getProductsByCategory(int categoryId, int page, int size) {
         return productRepository.findByCategoryId(categoryId, PageRequest.of(page, size))
-                .map(this::mapToResponse);
+                .map(productConverter::toProductResponse);
     }
 
     @Override
@@ -128,14 +131,14 @@ public class ProductServiceImpl implements ProductService {
                         request.getColorId(),
                         request.getSizeId(),
                         PageRequest.of(request.getPage(), request.getSize()))
-                .map(this::mapToResponse);
+                .map(productConverter::toProductResponse);
     }
 
     @Override
     public ProductResponse getProduct(String id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        return mapToResponse(product);
+        return productConverter.toProductResponse(product);
     }
 
     @Override
@@ -167,13 +170,14 @@ public class ProductServiceImpl implements ProductService {
                         .color(color)
                         .stockQuantity(vReq.getStockQuantity())
                         .build();
-                return productVariantRepository.save(variant);
+                return variant;
             }).collect(Collectors.toList());
+            productVariantRepository.saveAll(variants);
             product.setVariants(variants);
         }
 
         Product savedProduct = productRepository.save(product);
-        return mapToResponse(savedProduct);
+        return productConverter.toProductResponse(savedProduct);
     }
 
     @Override
@@ -186,57 +190,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponse> getHotProducts() {
         return productRepository.findTop10ByOrderByFavoriteCountDesc(PageRequest.of(0, 10))
                 .stream()
-                .map(this::mapToResponse)
+                .map(productConverter::toProductResponse)
                 .collect(Collectors.toList());
-    }
-
-    private ProductResponse mapToResponse(Product product) {
-        CategoryResponse categoryResponse = CategoryResponse.builder()
-                .id(product.getCategory().getId())
-                .name(product.getCategory().getName())
-                .description(product.getCategory().getDescription())
-                .imageUrl(product.getCategory().getImageUrl())
-                .build();
-
-        List<ProductImageResponse> imageResponses = product.getImages().stream().map(img ->
-                ProductImageResponse.builder()
-                        .id(img.getId())
-                        .imageUrl(img.getImageUrl())
-                        .isPrimary(img.getIsPrimary())
-                        .build()
-        ).collect(Collectors.toList());
-
-        List<ProductVariantResponse> variantResponses = product.getVariants().stream().map(v -> {
-            SizeResponse sizeResp = v.getSize() != null ? SizeResponse.builder()
-                    .id(v.getSize().getId())
-                    .name(v.getSize().getName())
-                    .build() : null;
-
-            ColorResponse colorResp = v.getColor() != null ? ColorResponse.builder()
-                    .id(v.getColor().getId())
-                    .name(v.getColor().getName())
-                    .hexCode(v.getColor().getHexCode())
-                    .build() : null;
-
-            return ProductVariantResponse.builder()
-                    .id(v.getId())
-                    .size(sizeResp)
-                    .color(colorResp)
-                    .stockQuantity(v.getStockQuantity())
-                    .build();
-        }).collect(Collectors.toList());
-
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .basePrice(product.getBasePrice())
-                .status(product.getStatus() != null ? product.getStatus().name() : null)
-                .brand(product.getBrand())
-                .category(categoryResponse)
-                .images(imageResponses)
-                .variants(variantResponses)
-                .favoriteCount(product.getFavoriteCount())
-                .build();
     }
 }
