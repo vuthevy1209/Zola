@@ -60,6 +60,7 @@ export interface Product {
     category: Category;
     images: ProductImage[];
     variants: ProductVariant[];
+    favoriteCount?: number;
 }
 
 export interface PagedResponse<T> {

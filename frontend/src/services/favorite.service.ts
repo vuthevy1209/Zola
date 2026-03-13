@@ -13,7 +13,7 @@ export interface Review {
     createdAt: string;
 }
 
-export const interactionService = {
+export const favoriteService = {
     async getReviews(productId: string): Promise<Review[]> {
         await delay(600);
         // Mock reviews

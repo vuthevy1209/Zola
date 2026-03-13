@@ -20,7 +20,7 @@ import {
     ProductVariant,
 } from "@/services/product.service";
 import { cartService } from "@/services/cart.service";
-import { interactionService, Review } from "@/services/interaction.service";
+import { favoriteService, Review } from '@/services/favorite.service';
 
 const { width } = Dimensions.get("window");
 const CONTENT_SHEET_OVERLAP = 40;
@@ -31,7 +31,7 @@ export default function ProductDetailScreen() {
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isLiked, setIsLiked] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [addingToCart, setAddingToCart] = useState(false);
     const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
@@ -50,12 +50,12 @@ export default function ProductDetailScreen() {
         try {
             const [data, revs, liked] = await Promise.all([
                 productService.getProductById(id),
-                interactionService.getReviews(id),
-                interactionService.checkIsFavorite(id),
+                favoriteService.getReviews(id),
+                favoriteService.checkIsFavorite(id),
             ]);
             setProduct(data);
             setReviews(revs);
-            setIsLiked(liked);
+            setIsFavorite(liked);
 
             // Default selected image (primary first)
             const primaryImg =
@@ -116,8 +116,8 @@ export default function ProductDetailScreen() {
 
     const handleToggleFavorite = async () => {
         if (!product) return;
-        const newStatus = await interactionService.toggleFavorite(product);
-        setIsLiked(newStatus);
+        const newStatus = await favoriteService.toggleFavorite(product);
+        setIsFavorite(newStatus);
     };
 
     const handleAddToCart = async () => {
@@ -219,9 +219,9 @@ export default function ProductDetailScreen() {
                             onPress={handleToggleFavorite}
                         >
                             <IconButton
-                                icon={isLiked ? "heart" : "heart-outline"}
+                                icon={isFavorite ? "heart" : "heart-outline"}
                                 size={22}
-                                iconColor={isLiked ? "#FF5252" : "#1E1E1E"}
+                                iconColor={isFavorite ? "#FF5252" : "#1E1E1E"}
                                 style={{ margin: 0 }}
                             />
                         </TouchableOpacity>

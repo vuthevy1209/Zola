@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { interactionService } from '@/services/interaction.service';
+import { favoriteService } from '@/services/favorite.service';
 import { Product, getProductPrimaryImage } from '@/services/product.service';
 
 const { width } = Dimensions.get('window');
@@ -28,7 +28,7 @@ export default function FavoritesScreen() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const res = await interactionService.getFavorites(0);
+      const res = await favoriteService.getFavorites(0);
       setProducts(res.content);
       setHasMore(!res.last);
       setPage(0);
@@ -44,7 +44,7 @@ export default function FavoritesScreen() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const res = await interactionService.getFavorites(nextPage);
+      const res = await favoriteService.getFavorites(nextPage);
       setProducts(prev => [...prev, ...res.content]);
       setPage(nextPage);
       setHasMore(!res.last);

@@ -2,14 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Text, useTheme, ActivityIndicator, Appbar } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { interactionService } from '@/services/interaction.service';
-import { Product } from '@/services/product.service';
+import { favoriteService } from '@/services/favorite.service';
+import { Product, getProductPrimaryImage } from '@/services/product.service';
 
 export default function FavoritesScreen() {
     const theme = useTheme();
     const router = useRouter();
 
-    const [favorites, setFavorites] = useState<Product[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
     useFocusEffect(
@@ -20,9 +20,14 @@ export default function FavoritesScreen() {
 
     const loadFavorites = async () => {
         setLoading(true);
-        const data = await interactionService.getFavorites();
-        setFavorites(data);
-        setLoading(false);
+        try {
+            const res = await favoriteService.getFavorites(0);
+            setProducts(res.content);
+        } catch (error) {
+            console.error("Failed to load favorites:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const formatPrice = (price: number) => {
@@ -34,15 +39,15 @@ export default function FavoritesScreen() {
             style={[styles.resultItem, { borderBottomColor: theme.colors.outlineVariant }]}
             onPress={() => router.push(`/product/${item.id}`)}
         >
-            <Image source={{ uri: item.image }} style={styles.resultImage} />
+            <Image source={{ uri: getProductPrimaryImage(item) }} style={styles.resultImage} />
             <View style={styles.resultContent}>
                 <Text numberOfLines={2} style={styles.resultTitle}>{item.name}</Text>
                 <Text style={{ color: theme.colors.error, fontWeight: 'bold', marginTop: 4 }}>
-                    {formatPrice(item.price)}
+                    {formatPrice(item.basePrice)}
                 </Text>
                 <View style={styles.statsContainer}>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>⭐ {item.rating}</Text>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>Đã bán {item.sold}</Text>
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>⭐ {item.favoriteCount || 0}</Text>
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>{item.brand}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -59,10 +64,10 @@ export default function FavoritesScreen() {
                 <ActivityIndicator style={styles.loading} />
             ) : (
                 <FlatList
-                    data={favorites}
+                    data={products}
                     keyExtractor={(item) => item.id}
                     renderItem={renderProduct}
-                    contentContainerStyle={favorites.length === 0 ? styles.emptyContainer : styles.listContent}
+                    contentContainerStyle={products.length === 0 ? styles.emptyContainer : styles.listContent}
                     ListEmptyComponent={
                         <Text style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>
                             Chưa có sản phẩm yêu thích nào
