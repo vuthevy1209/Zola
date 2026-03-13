@@ -1,6 +1,7 @@
 package com.zola.controllers;
 
 import com.zola.dto.request.product.ProductRequest;
+import com.zola.dto.request.product.SearchProductRequest;
 import com.zola.dto.response.ApiResponse;
 import com.zola.dto.response.product.ProductResponse;
 import com.zola.services.product.ProductService;
@@ -26,7 +27,7 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping
-        @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.createProduct(request))
@@ -34,7 +35,7 @@ public class ProductController {
     }
 
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> uploadImages(
             @PathVariable String id,
             @RequestParam("files") List<MultipartFile> files) throws IOException {
@@ -56,6 +57,13 @@ public class ProductController {
                 .build();
     }
 
+    @GetMapping("/search")
+    public ApiResponse<Page<ProductResponse>> searchProducts(@RequestBody SearchProductRequest request) {
+        return ApiResponse.<Page<ProductResponse>>builder()
+                .result(productService.searchProducts(request))
+                .build();
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getProduct(@PathVariable String id) {
         return ApiResponse.<ProductResponse>builder()
@@ -64,7 +72,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-        @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(@PathVariable String id, @RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.updateProduct(id, request))
@@ -72,7 +80,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-        @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<String> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return ApiResponse.<String>builder()

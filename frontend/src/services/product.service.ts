@@ -6,6 +6,22 @@ export interface ProductImage {
     isPrimary: boolean;
 }
 
+export interface SearchHistory {
+    id: number;
+    keyword: string;
+    createdAt: string;
+}
+
+export interface SearchFilters {
+    keyword?: string;
+    categoryId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    colorId?: number;
+    page?: number;
+    size?: number;
+}
+
 export interface Category {
     id: number;
     name: string;
@@ -65,5 +81,23 @@ export const productService = {
     async getProductById(id: string): Promise<Product> {
         const response = await api.get(`/products/${id}`);
         return response.data.result;
+    },
+
+    async searchProducts(filters: SearchFilters): Promise<PagedResponse<Product>> {
+        const response = await api.get('/products/search', { params: filters });
+        return response.data.result;
+    },
+
+    async getSearchHistory(limit = 10): Promise<SearchHistory[]> {
+        const response = await api.get('/search-history', { params: { limit } });
+        return response.data.result;
+    },
+
+    async deleteSearchHistory(id: number): Promise<void> {
+        await api.delete(`/search-history/${id}`);
+    },
+
+    async clearSearchHistory(): Promise<void> {
+        await api.delete('/search-history');
     },
 };

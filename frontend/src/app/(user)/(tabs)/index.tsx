@@ -15,7 +15,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [hotProducts, setHotProducts] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);

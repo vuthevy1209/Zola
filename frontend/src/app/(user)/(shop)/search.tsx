@@ -3,53 +3,98 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Image, TextInput } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Searchbar, Text, useTheme, Card, ActivityIndicator, IconButton } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
-import { productService, Product, Category } from '@/services/product.service';
+import { productService, Product, Category, SearchHistory, SearchFilters, getProductPrimaryImage } from '@/services/product.service';
+import FilterModal, { FilterState } from '@/components/filter-modal';
 
 export default function SearchScreen() {
     const theme = useTheme();
     const router = useRouter();
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [submittedQuery, setSubmittedQuery] = useState('');
     const [results, setResults] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+    const [history, setHistory] = useState<SearchHistory[]>([]);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [isInputFocused, setIsInputFocused] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({
+        minPrice: '', maxPrice: '', colors: [], rating: null, category: null, discounts: []
+    });
 
     useEffect(() => {
         productService.getCategories().then(setCategories);
+        fetchHistory();
     }, []);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedQuery(searchQuery);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
+    const fetchHistory = async () => {
+        try {
+            const res = await productService.getSearchHistory();
+            setHistory(res);
+        } catch(e) {}
+    };
+
+    const handleDeleteHistory = async (id: number) => {
+        try {
+            await productService.deleteSearchHistory(id);
+            fetchHistory();
+        } catch (e) {}
+    };
+
+    const handleClearHistory = async () => {
+        try {
+            await productService.clearSearchHistory();
+            fetchHistory();
+        } catch (e) {}
+    };
 
     useEffect(() => {
-        handleSearch();
-    }, [debouncedQuery, selectedCategory]);
+        loadProducts(0);
+    }, [submittedQuery, selectedCategory, filters]);
 
-    const handleSearch = async () => {
-        setLoading(true);
+    const loadProducts = async (pageNumber: number, append: boolean = false) => {
+        if (pageNumber === 0) setLoading(true);
         try {
             let filtered = [];
-            if (debouncedQuery.trim() === '') {
+            const isNoFilter = submittedQuery.trim() === '' && !filters.minPrice && !filters.maxPrice && filters.colors.length === 0;
+
+            let initial;
+            if (isNoFilter && !selectedCategory) {
                 // Just load some default products if query is empty
-                const initial = await productService.getProducts(1, 20, selectedCategory || undefined);
-                filtered = initial.data;
+                initial = await productService.getProducts(pageNumber, 20);
             } else {
-                filtered = await productService.searchProducts(debouncedQuery);
-                if (selectedCategory) {
-                    filtered = filtered.filter((p) => p.categoryId === selectedCategory);
+                const searchPayload: SearchFilters = {
+                    keyword: submittedQuery.trim() !== '' ? submittedQuery : undefined,
+                    categoryId: selectedCategory ? selectedCategory : undefined,
+                    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+                    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+                    page: pageNumber,
+                    size: 20
+                };
+                
+                initial = await productService.searchProducts(searchPayload);
+                
+                if (pageNumber === 0 && submittedQuery.trim() !== '') {
+                    fetchHistory();
                 }
             }
-            setResults(filtered);
+            
+            const newContent = initial?.content || (initial as any)?.data || [];
+            if (append) {
+                setResults(prev => [...prev, ...newContent]);
+            } else {
+                setResults(newContent);
+            }
+            setHasMore(newContent.length > 0 && !(initial?.last));
+            setPage(pageNumber);
+            
         } catch (e) {
             console.error(e);
         } finally {
-            setLoading(false);
+            if (pageNumber === 0) setLoading(false);
         }
     };
 
@@ -62,15 +107,15 @@ export default function SearchScreen() {
             style={[styles.resultItem, { borderBottomColor: theme.colors.outlineVariant }]}
             onPress={() => router.push(`/product/${item.id}`)}
         >
-            <Image source={{ uri: item.image }} style={styles.resultImage} />
+            <Image source={{ uri: getProductPrimaryImage(item) || 'https://via.placeholder.com/80' }} style={styles.resultImage} />
             <View style={styles.resultContent}>
                 <Text numberOfLines={2} style={styles.resultTitle}>{item.name}</Text>
                 <Text style={{ color: '#222', fontWeight: 'bold', marginTop: 4, fontSize: 16 }}>
-                    {formatPrice(item.price)}
+                    {formatPrice(item.basePrice)}
                 </Text>
                 <View style={styles.statsContainer}>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>⭐ {item.rating}</Text>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>Đã bán {item.sold}</Text>
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>⭐ 4.5</Text>
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>Đã bán 1k+</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -87,8 +132,15 @@ export default function SearchScreen() {
                         placeholder="Tìm kiếm sản phẩm..."
                         placeholderTextColor="#888"
                         onChangeText={setSearchQuery}
+                        onSubmitEditing={() => {
+                            setSubmittedQuery(searchQuery);
+                            setIsInputFocused(false);
+                        }}
+                        returnKeyType="search"
                         value={searchQuery}
                         style={styles.searchInput}
+                        onFocus={() => setIsInputFocused(true)}
+                        onBlur={() => setIsInputFocused(false)}
                         autoFocus
                     />
                     {searchQuery.length > 0 && (
@@ -96,20 +148,74 @@ export default function SearchScreen() {
                             icon="close-circle"
                             size={18}
                             iconColor="#ccc"
-                            onPress={() => setSearchQuery('')}
+                            onPress={() => {
+                                setSearchQuery('');
+                                setSubmittedQuery('');
+                            }}
                             style={{ margin: 0 }}
                         />
                     )}
                 </View>
+                {isInputFocused ? (
+                    <IconButton 
+                        icon="magnify"
+                        onPress={() => {
+                            setSubmittedQuery(searchQuery);
+                            setIsInputFocused(false);
+                        }}
+                    />
+                ) : (
+                    <IconButton icon="tune-variant" onPress={() => setFilterVisible(true)} />
+                )}
             </View>
 
-            {/* Filters */}
+            <FilterModal 
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                initialFilters={filters}
+                onApply={(newFilters) => {
+                    setFilters(newFilters);
+                    setFilterVisible(false);
+                }}
+            />
+
+            {searchQuery.trim() === '' && !filters.minPrice && !filters.maxPrice && filters.colors.length === 0 ? (
+                <View style={{ flex: 1, padding: 16 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <Text variant="titleMedium" style={{ fontWeight: 'bold', color: '#666' }}>Recent Searches</Text>
+                        <IconButton icon="delete-outline" iconColor="#666" size={20} onPress={handleClearHistory} />
+                    </View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {history.map(item => (
+                            <TouchableOpacity 
+                                key={item.id} 
+                                style={styles.historyChip}
+                                onPress={() => {
+                                    setSearchQuery(item.keyword);
+                                    setSubmittedQuery(item.keyword);
+                                }}
+                            >
+                                <Text style={{ color: '#444' }}>{item.keyword}</Text>
+                                <IconButton 
+                                    icon="close" 
+                                    size={14} 
+                                    iconColor="#888" 
+                                    style={{ margin: 0, marginLeft: 4, width: 16, height: 16 }} 
+                                    onPress={() => handleDeleteHistory(item.id)} 
+                                />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            ) : (
+                <>
+                    {/* Filters */}
             <View style={styles.filterContainer}>
                 <FlatList
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    data={[{ id: 'all', name: 'Tất cả' }, ...categories]}
-                    keyExtractor={(item) => item.id}
+                    data={[{ id: 'all' as const, name: 'Tất cả' }, ...categories]}
+                    keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => {
                         const isSelected = item.id === 'all' ? selectedCategory === null : selectedCategory === item.id;
                         return (
@@ -121,7 +227,7 @@ export default function SearchScreen() {
                                         borderColor: theme.colors.primary,
                                     }
                                 ]}
-                                onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id)}
+                                onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id as number)}
                             >
                                 <Text style={{ color: isSelected ? theme.colors.onPrimary : theme.colors.onSurface }}>
                                     {item.name}
@@ -138,15 +244,24 @@ export default function SearchScreen() {
             ) : (
                 <FlatList
                     data={results}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item, index) => `${item.id}-${index}`}
                     renderItem={renderProduct}
+                    onEndReached={() => {
+                        if (hasMore && !loading) {
+                            loadProducts(page + 1, true);
+                        }
+                    }}
+                    onEndReachedThreshold={0.5}
                     contentContainerStyle={results.length === 0 ? styles.emptyContainer : styles.listContent}
+                    ListFooterComponent={hasMore && page > 0 ? <ActivityIndicator style={{ margin: 16 }} /> : null}
                     ListEmptyComponent={
                         <Text style={{ textAlign: 'center', marginTop: 40, opacity: 0.6 }}>
                             Không tìm thấy sản phẩm nào
                         </Text>
                     }
                 />
+            )}
+                </>
             )}
         </SafeAreaView>
     );
@@ -230,5 +345,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: 8,
         width: 140,
+    },
+    historyChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        paddingLeft: 12,
+        paddingRight: 8,
+        paddingVertical: 6,
     }
 });
