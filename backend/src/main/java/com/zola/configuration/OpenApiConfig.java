@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "Movie Ticket Booking API",
+                title = "Zola API",
                 version = "1.0.0"
         ),
         servers = {
