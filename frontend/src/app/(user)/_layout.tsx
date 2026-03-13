@@ -12,6 +12,7 @@ export default function UserLayout() {
             <Stack.Screen name="(shop)/search" />
             <Stack.Screen name="(shop)/favorites" />
             <Stack.Screen name="(shop)/category/[id]" />
+            <Stack.Screen name="product/[id]" />
         </Stack>
     );
 }

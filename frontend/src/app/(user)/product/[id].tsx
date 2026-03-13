@@ -139,6 +139,10 @@ export default function ProductDetailScreen() {
             currency: "VND",
         }).format(price);
 
+    const handleBack = () => {
+        router.back();
+    };
+
     if (loading) {
         return (
             <View style={styles.centerContainer}>
@@ -151,7 +155,7 @@ export default function ProductDetailScreen() {
         return (
             <View style={styles.centerContainer}>
                 <Text>Không tìm thấy sản phẩm</Text>
-                <Button onPress={() => router.back()} style={{ marginTop: 16 }}>
+                <Button onPress={handleBack} style={{ marginTop: 16 }}>
                     Quay lại
                 </Button>
             </View>
@@ -201,7 +205,7 @@ export default function ProductDetailScreen() {
                     <View style={styles.headerButtons}>
                         <TouchableOpacity
                             style={styles.headerBtn}
-                            onPress={() => router.back()}
+                            onPress={handleBack}
                         >
                             <IconButton
                                 icon="chevron-left"

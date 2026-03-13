@@ -44,14 +44,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="product/[id]"
-        options={{
-          href: null,
-          tabBarStyle: { display: 'flex' },
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
         name="order/[id]"
         options={{
           href: null,

@@ -220,10 +220,10 @@ const styles = StyleSheet.create({
     chipText: { fontSize: 13, color: '#555555', fontWeight: '500' },
     chipTextActive: { color: '#FFFFFF' },
     listContent: { paddingBottom: 24 },
-    row: { 
+    row: {
         paddingHorizontal: 12,
-        justifyContent: 'space-between', 
-        marginBottom: 12 
+        justifyContent: 'space-between',
+        marginBottom: 12
     },
     card: {
         width: CARD_WIDTH,
