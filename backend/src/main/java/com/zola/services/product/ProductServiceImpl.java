@@ -103,6 +103,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ProductResponse> getProductsByCategory(int categoryId, int page, int size) {
+        return productRepository.findByCategoryId(categoryId, PageRequest.of(page, size))
+                .map(this::mapToResponse);
+    }
+
+    @Override
     public ProductResponse getProduct(String id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));

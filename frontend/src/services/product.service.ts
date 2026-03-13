@@ -57,6 +57,11 @@ export const productService = {
         return response.data.result;
     },
 
+    async getProductsByCategory(categoryId: number, page = 0, size = 10): Promise<PagedResponse<Product>> {
+        const response = await api.get('/products', { params: { page, size, categoryId } });
+        return response.data.result;
+    },
+
     async getProductById(id: string): Promise<Product> {
         const response = await api.get(`/products/${id}`);
         return response.data.result;

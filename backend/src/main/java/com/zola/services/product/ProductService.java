@@ -13,6 +13,7 @@ public interface ProductService {
     ProductResponse uploadImages(String productId, List<MultipartFile> files) throws IOException;
     List<ProductResponse> getAllProducts();
     Page<ProductResponse> getProductsPaged(int page, int size);
+    Page<ProductResponse> getProductsByCategory(int categoryId, int page, int size);
     ProductResponse getProduct(String id);
     ProductResponse updateProduct(String id, ProductRequest request);
     void deleteProduct(String id);

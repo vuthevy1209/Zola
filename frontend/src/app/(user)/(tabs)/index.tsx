@@ -110,7 +110,7 @@ export default function HomeScreen() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
         {categories.map((cat) => (
-          <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => { }}>
+          <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => router.push({ pathname: '/(user)/(shop)/category/[id]', params: { id: cat.id, name: cat.name } })}>
             <View style={styles.categoryIconWrap}>
               <Image source={{ uri: cat?.imageUrl }} style={styles.categoryImage} resizeMode="cover" />
             </View>

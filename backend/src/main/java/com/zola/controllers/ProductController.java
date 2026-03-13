@@ -46,9 +46,13 @@ public class ProductController {
     @GetMapping
     public ApiResponse<Page<ProductResponse>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer categoryId) {
+        Page<ProductResponse> result = categoryId != null
+                ? productService.getProductsByCategory(categoryId, page, size)
+                : productService.getProductsPaged(page, size);
         return ApiResponse.<Page<ProductResponse>>builder()
-                .result(productService.getProductsPaged(page, size))
+                .result(result)
                 .build();
     }
 
