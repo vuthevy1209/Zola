@@ -26,7 +26,7 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+        @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.createProduct(request))
@@ -34,7 +34,7 @@ public class ProductController {
     }
 
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+        @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> uploadImages(
             @PathVariable String id,
             @RequestParam("files") List<MultipartFile> files) throws IOException {
@@ -64,7 +64,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+        @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(@PathVariable String id, @RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.updateProduct(id, request))
@@ -72,7 +72,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+        @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<String> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return ApiResponse.<String>builder()

@@ -109,8 +109,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthResponse authenticate(LoginRequest request) {
         User user = userRepository.findByUsername(request.getIdentifier())
-                .or(() -> userRepository.findByPhone(request.getIdentifier()))
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+            .or(() -> userRepository.findByEmail(request.getIdentifier()))
+            .or(() -> userRepository.findByPhone(request.getIdentifier()))
+            .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);

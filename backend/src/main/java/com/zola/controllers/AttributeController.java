@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/admin/attributes")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AttributeController {
 
     SizeService sizeService;
