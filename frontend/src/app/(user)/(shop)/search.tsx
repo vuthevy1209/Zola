@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Searchbar, Text, useTheme, Card, ActivityIndicator, IconButton } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
 import { productService, Product, Category, SearchHistory, SearchFilters, getProductPrimaryImage } from '@/services/product.service';
 import FilterModal, { FilterState } from '@/components/filter-modal';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width / 2 - 16;
 
 export default function SearchScreen() {
     const theme = useTheme();
@@ -17,7 +20,6 @@ export default function SearchScreen() {
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [history, setHistory] = useState<SearchHistory[]>([]);
     const [filterVisible, setFilterVisible] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
@@ -52,11 +54,11 @@ export default function SearchScreen() {
         } catch (e) {}
     };
 
-    const doSearch = (query: string, catId: number | null = selectedCategory, f: FilterState = filters, pageNumber = 0, append = false) => {
-        loadProducts(query, catId, f, pageNumber, append);
+    const doSearch = (query: string, f: FilterState = filters, pageNumber = 0, append = false) => {
+        loadProducts(query, f, pageNumber, append);
     };
 
-    const loadProducts = async (query: string, catId: number | null, f: FilterState, pageNumber: number, append: boolean = false) => {
+    const loadProducts = async (query: string, f: FilterState, pageNumber: number, append: boolean = false) => {
         if (pageNumber === 0) {
             setLoading(true);
             setHasSearched(true);
@@ -64,7 +66,7 @@ export default function SearchScreen() {
         try {
             const searchPayload: SearchFilters = {
                 keyword: query.trim() !== '' ? query.trim() : undefined,
-                categoryId: catId ?? undefined,
+                categoryId: f.category ?? undefined,
                 minPrice: f.minPrice ? Number(f.minPrice) : undefined,
                 maxPrice: f.maxPrice ? Number(f.maxPrice) : undefined,
                 page: pageNumber,
@@ -98,19 +100,21 @@ export default function SearchScreen() {
 
     const renderProduct = ({ item }: { item: Product }) => (
         <TouchableOpacity
-            style={[styles.resultItem, { borderBottomColor: theme.colors.outlineVariant }]}
+            style={styles.card}
+            activeOpacity={0.8}
             onPress={() => router.push(`/product/${item.id}`)}
         >
-            <Image source={{ uri: getProductPrimaryImage(item) || 'https://via.placeholder.com/80' }} style={styles.resultImage} />
-            <View style={styles.resultContent}>
-                <Text numberOfLines={2} style={styles.resultTitle}>{item.name}</Text>
-                <Text style={{ color: '#222', fontWeight: 'bold', marginTop: 4, fontSize: 16 }}>
-                    {formatPrice(item.basePrice)}
-                </Text>
-                <View style={styles.statsContainer}>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>⭐ 4.5</Text>
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }}>Đã bán 1k+</Text>
+            <Image 
+                source={{ uri: getProductPrimaryImage(item) || 'https://via.placeholder.com/80' }} 
+                style={styles.cardImage} 
+                resizeMode="cover" 
+            />
+            <View style={styles.cardBody}>
+                <Text numberOfLines={2} style={styles.cardName}>{item.name}</Text>
+                <View style={styles.priceContainer}>
+                    <Text style={styles.cardPrice}>{formatPrice(item.basePrice)}</Text>
                 </View>
+                <Text numberOfLines={1} style={styles.statsText}>{item.brand}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -173,10 +177,11 @@ export default function SearchScreen() {
                 visible={filterVisible}
                 onClose={() => setFilterVisible(false)}
                 initialFilters={filters}
+                categories={categories}
                 onApply={(newFilters) => {
                     setFilters(newFilters);
                     setFilterVisible(false);
-                    doSearch(submittedQuery, selectedCategory, newFilters);
+                    doSearch(submittedQuery, newFilters);
                 }}
             />
 
@@ -212,37 +217,7 @@ export default function SearchScreen() {
             ) : (
                 <>
                     {/* Filters */}
-            <View style={styles.filterContainer}>
-                <FlatList
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    data={[{ id: 'all' as const, name: 'Tất cả' }, ...categories]}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => {
-                        const isSelected = item.id === 'all' ? selectedCategory === null : selectedCategory === item.id;
-                        return (
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterChip,
-                                    {
-                                        backgroundColor: isSelected ? theme.colors.primary : theme.colors.elevation.level2,
-                                        borderColor: theme.colors.primary,
-                                    }
-                                ]}
-                                onPress={() => {
-                                    const newCat = item.id === 'all' ? null : item.id as number;
-                                    setSelectedCategory(newCat);
-                                    doSearch(submittedQuery, newCat);
-                                }}
-                            >
-                                <Text style={{ color: isSelected ? theme.colors.onPrimary : theme.colors.onSurface }}>
-                                    {item.name}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    }}
-                />
-            </View>
+            <View style={{ height: 12 }} />
 
             {/* Results */}
             {loading ? (
@@ -251,10 +226,12 @@ export default function SearchScreen() {
                 <FlatList
                     data={results}
                     keyExtractor={(item, index) => `${item.id}-${index}`}
+                    numColumns={2}
                     renderItem={renderProduct}
+                    columnWrapperStyle={styles.row}
                     onEndReached={() => {
                         if (hasMore && !loading) {
-                            loadProducts(submittedQuery, selectedCategory, filters, page + 1, true);
+                            loadProducts(submittedQuery, filters, page + 1, true);
                         }
                     }}
                     onEndReachedThreshold={0.5}
@@ -325,32 +302,56 @@ const styles = StyleSheet.create({
     listContent: {
         paddingBottom: 24,
     },
+    row: {
+        paddingHorizontal: 12,
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
     emptyContainer: {
         flexGrow: 1,
     },
-    resultItem: {
-        flexDirection: 'row',
-        padding: 16,
-        borderBottomWidth: 1,
+    card: {
+        width: CARD_WIDTH,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
     },
-    resultImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
+    cardImage: {
+        width: '100%',
+        height: CARD_WIDTH,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#F5F5F5',
     },
-    resultContent: {
-        flex: 1,
-        marginLeft: 12,
-        justifyContent: 'center',
+    cardBody: {
+        padding: 12,
     },
-    resultTitle: {
+    cardName: {
         fontSize: 14,
+        fontWeight: '500',
+        color: '#222',
+        lineHeight: 20,
+        height: 40, // 2 lines
+        marginBottom: 8,
     },
-    statsContainer: {
+    priceContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
-        width: 140,
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    cardPrice: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#222',
+    },
+    statsText: {
+        fontSize: 12,
+        color: '#888',
     },
     historyChip: {
         flexDirection: 'row',

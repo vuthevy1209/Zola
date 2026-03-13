@@ -18,7 +18,7 @@ import {
 } from '@/services/product.service';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2;
+const CARD_WIDTH = width / 2 - 16;
 
 export default function CategoryScreen() {
     const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
@@ -83,38 +83,26 @@ export default function CategoryScreen() {
     const renderProduct = ({ item }: { item: Product }) => (
         <TouchableOpacity
             style={styles.card}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
             onPress={() => router.push(`/product/${item.id}`)}
         >
-            <View style={styles.imageWrapper}>
-                <Image
-                    source={{ uri: getProductPrimaryImage(item) }}
-                    style={styles.cardImage}
-                    resizeMode="cover"
-                />
-                <TouchableOpacity style={styles.heartBtn} activeOpacity={0.7}>
-                    <IconButton icon="heart-outline" size={18} iconColor="#888" style={{ margin: 0 }} />
-                </TouchableOpacity>
-            </View>
+            <Image
+                source={{ uri: getProductPrimaryImage(item) }}
+                style={styles.cardImage}
+                resizeMode="cover"
+            />
             <View style={styles.cardBody}>
                 <Text numberOfLines={2} style={styles.cardName}>{item.name}</Text>
-                <Text style={styles.cardPrice}>{formatPrice(item.basePrice)}</Text>
+                <View style={styles.priceContainer}>
+                    <Text style={styles.cardPrice}>{formatPrice(item.basePrice)}</Text>
+                </View>
+                <Text numberOfLines={1} style={styles.statsText}>{item.brand}</Text>
             </View>
         </TouchableOpacity>
     );
 
     const renderHeader = () => (
         <View>
-            {/* Result count */}
-            <View style={styles.resultRow}>
-                <View>
-                    <Text style={styles.foundLabel}>Tìm thấy</Text>
-                    <Text style={styles.foundCount}>
-                        {loading ? '...' : `${products.length}${hasMore ? '+' : ''} kết quả`}
-                    </Text>
-                </View>
-            </View>
-
             {/* Category filter chips */}
             {categories.length > 0 && (
                 <FlatList
@@ -216,7 +204,7 @@ const styles = StyleSheet.create({
     },
     foundLabel: { fontSize: 14, color: '#999999' },
     foundCount: { fontSize: 22, fontWeight: '700', color: '#1E1E1E', marginTop: 2 },
-    filterList: { paddingHorizontal: 16, paddingBottom: 16, gap: 8 },
+    filterList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, gap: 8 },
     chip: {
         paddingHorizontal: 16,
         paddingVertical: 8,
@@ -231,50 +219,48 @@ const styles = StyleSheet.create({
     },
     chipText: { fontSize: 13, color: '#555555', fontWeight: '500' },
     chipTextActive: { color: '#FFFFFF' },
-    listContent: { paddingHorizontal: 12, paddingBottom: 24 },
-    row: { justifyContent: 'space-between', marginBottom: 16 },
+    listContent: { paddingBottom: 24 },
+    row: { 
+        paddingHorizontal: 12,
+        justifyContent: 'space-between', 
+        marginBottom: 12 
+    },
     card: {
         width: CARD_WIDTH,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
         elevation: 3,
     },
-    imageWrapper: { position: 'relative' },
     cardImage: {
-        width: CARD_WIDTH,
-        height: CARD_WIDTH * 1.2,
+        width: '100%',
+        height: CARD_WIDTH,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
         backgroundColor: '#F5F5F5',
-    },
-    heartBtn: {
-        position: 'absolute',
-        top: 6,
-        right: 6,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        width: 34,
-        height: 34,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
     },
     cardBody: { padding: 12 },
     cardName: {
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '500',
-        color: '#1E1E1E',
-        lineHeight: 18,
-        marginBottom: 6,
-        height: 36,
+        color: '#222',
+        lineHeight: 20,
+        height: 40, // 2 lines
+        marginBottom: 8,
     },
-    cardPrice: { fontSize: 15, fontWeight: '700', color: '#1E1E1E' },
+    priceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    cardPrice: { fontSize: 16, fontWeight: '700', color: '#222' },
+    statsText: {
+        fontSize: 12,
+        color: '#888',
+    },
     emptyText: { textAlign: 'center', marginTop: 60, opacity: 0.5, fontSize: 15 },
 });
