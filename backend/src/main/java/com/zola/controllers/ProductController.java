@@ -58,7 +58,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ApiResponse<Page<ProductResponse>> searchProducts(@RequestBody SearchProductRequest request) {
+    public ApiResponse<Page<ProductResponse>> searchProducts(@ModelAttribute SearchProductRequest request) {
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(productService.searchProducts(request))
                 .build();
@@ -73,7 +73,8 @@ public class ProductController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<ProductResponse> updateProduct(@PathVariable String id, @RequestBody @Valid ProductRequest request) {
+    public ApiResponse<ProductResponse> updateProduct(@PathVariable String id,
+                                                      @RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.updateProduct(id, request))
                 .build();

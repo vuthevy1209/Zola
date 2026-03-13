@@ -24,6 +24,7 @@ export default function SearchScreen() {
     const [filters, setFilters] = useState<FilterState>({
         minPrice: '', maxPrice: '', colors: [], rating: null, category: null, discounts: []
     });
+    const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
         productService.getCategories().then(setCategories);
@@ -51,46 +52,39 @@ export default function SearchScreen() {
         } catch (e) {}
     };
 
-    useEffect(() => {
-        loadProducts(0);
-    }, [submittedQuery, selectedCategory, filters]);
+    const doSearch = (query: string, catId: number | null = selectedCategory, f: FilterState = filters, pageNumber = 0, append = false) => {
+        loadProducts(query, catId, f, pageNumber, append);
+    };
 
-    const loadProducts = async (pageNumber: number, append: boolean = false) => {
-        if (pageNumber === 0) setLoading(true);
+    const loadProducts = async (query: string, catId: number | null, f: FilterState, pageNumber: number, append: boolean = false) => {
+        if (pageNumber === 0) {
+            setLoading(true);
+            setHasSearched(true);
+        }
         try {
-            let filtered = [];
-            const isNoFilter = submittedQuery.trim() === '' && !filters.minPrice && !filters.maxPrice && filters.colors.length === 0;
+            const searchPayload: SearchFilters = {
+                keyword: query.trim() !== '' ? query.trim() : undefined,
+                categoryId: catId ?? undefined,
+                minPrice: f.minPrice ? Number(f.minPrice) : undefined,
+                maxPrice: f.maxPrice ? Number(f.maxPrice) : undefined,
+                page: pageNumber,
+                size: 20
+            };
 
-            let initial;
-            if (isNoFilter && !selectedCategory) {
-                // Just load some default products if query is empty
-                initial = await productService.getProducts(pageNumber, 20);
-            } else {
-                const searchPayload: SearchFilters = {
-                    keyword: submittedQuery.trim() !== '' ? submittedQuery : undefined,
-                    categoryId: selectedCategory ? selectedCategory : undefined,
-                    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-                    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-                    page: pageNumber,
-                    size: 20
-                };
-                
-                initial = await productService.searchProducts(searchPayload);
-                
-                if (pageNumber === 0 && submittedQuery.trim() !== '') {
-                    fetchHistory();
-                }
+            const initial = await productService.searchProducts(searchPayload);
+
+            if (pageNumber === 0 && query.trim() !== '') {
+                fetchHistory();
             }
-            
+
             const newContent = initial?.content || (initial as any)?.data || [];
             if (append) {
                 setResults(prev => [...prev, ...newContent]);
             } else {
                 setResults(newContent);
             }
-            setHasMore(newContent.length > 0 && !(initial?.last));
+            setHasMore(newContent.length > 0 && !initial?.last);
             setPage(pageNumber);
-            
         } catch (e) {
             console.error(e);
         } finally {
@@ -133,8 +127,10 @@ export default function SearchScreen() {
                         placeholderTextColor="#888"
                         onChangeText={setSearchQuery}
                         onSubmitEditing={() => {
+                            if (searchQuery.trim() === '') return;
                             setSubmittedQuery(searchQuery);
                             setIsInputFocused(false);
+                            doSearch(searchQuery);
                         }}
                         returnKeyType="search"
                         value={searchQuery}
@@ -151,6 +147,8 @@ export default function SearchScreen() {
                             onPress={() => {
                                 setSearchQuery('');
                                 setSubmittedQuery('');
+                                setResults([]);
+                                setHasSearched(false);
                             }}
                             style={{ margin: 0 }}
                         />
@@ -160,8 +158,10 @@ export default function SearchScreen() {
                     <IconButton 
                         icon="magnify"
                         onPress={() => {
+                            if (searchQuery.trim() === '') return;
                             setSubmittedQuery(searchQuery);
                             setIsInputFocused(false);
+                            doSearch(searchQuery);
                         }}
                     />
                 ) : (
@@ -176,10 +176,11 @@ export default function SearchScreen() {
                 onApply={(newFilters) => {
                     setFilters(newFilters);
                     setFilterVisible(false);
+                    doSearch(submittedQuery, selectedCategory, newFilters);
                 }}
             />
 
-            {searchQuery.trim() === '' && !filters.minPrice && !filters.maxPrice && filters.colors.length === 0 ? (
+            {!hasSearched ? (
                 <View style={{ flex: 1, padding: 16 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold', color: '#666' }}>Recent Searches</Text>
@@ -193,6 +194,7 @@ export default function SearchScreen() {
                                 onPress={() => {
                                     setSearchQuery(item.keyword);
                                     setSubmittedQuery(item.keyword);
+                                    doSearch(item.keyword);
                                 }}
                             >
                                 <Text style={{ color: '#444' }}>{item.keyword}</Text>
@@ -227,7 +229,11 @@ export default function SearchScreen() {
                                         borderColor: theme.colors.primary,
                                     }
                                 ]}
-                                onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id as number)}
+                                onPress={() => {
+                                    const newCat = item.id === 'all' ? null : item.id as number;
+                                    setSelectedCategory(newCat);
+                                    doSearch(submittedQuery, newCat);
+                                }}
                             >
                                 <Text style={{ color: isSelected ? theme.colors.onPrimary : theme.colors.onSurface }}>
                                     {item.name}
@@ -248,7 +254,7 @@ export default function SearchScreen() {
                     renderItem={renderProduct}
                     onEndReached={() => {
                         if (hasMore && !loading) {
-                            loadProducts(page + 1, true);
+                            loadProducts(submittedQuery, selectedCategory, filters, page + 1, true);
                         }
                     }}
                     onEndReachedThreshold={0.5}
