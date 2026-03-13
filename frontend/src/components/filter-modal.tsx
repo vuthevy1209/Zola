@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Text, IconButton, Button, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Category } from '@/services/product.service';
+import { Category, Color, Size } from '@/services/product.service';
 
 export interface FilterState {
     minPrice: string;
     maxPrice: string;
-    colors: string[];
-    rating: string | null;
+    colorId: number | null;
+    sizeId: number | null;
     category: number | null;
-    discounts: string[];
 }
 
 interface FilterModalProps {
@@ -19,13 +18,19 @@ interface FilterModalProps {
     onApply: (filters: FilterState) => void;
     initialFilters: FilterState;
     categories: Category[];
+    colors: Color[];
+    sizes: Size[];
 }
 
-const AVAILABLE_COLORS = ['#E6A23C', '#F56C6C', '#1E1E1E', '#606266', '#DCDFE6', '#8B5A2B', '#FFB6C1'];
-const RATINGS = ['1', '2', '3', '4', '5'];
-const DISCOUNTS = ['50% off', '40% off', '30% off', '25% off'];
-
-export default function FilterModal({ visible, onClose, onApply, initialFilters, categories }: FilterModalProps) {
+export default function FilterModal({
+    visible,
+    onClose,
+    onApply,
+    initialFilters,
+    categories,
+    colors,
+    sizes
+}: FilterModalProps) {
     const theme = useTheme();
     const [filters, setFilters] = useState<FilterState>(initialFilters);
 
@@ -33,28 +38,16 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters,
         setFilters({
             minPrice: '',
             maxPrice: '',
-            colors: [],
-            rating: null,
+            colorId: null,
+            sizeId: null,
             category: null,
-            discounts: [],
         });
     };
 
-    const toggleColor = (color: string) => {
+    const toggleColor = (id: number) => {
         setFilters(prev => ({
             ...prev,
-            colors: prev.colors.includes(color)
-                ? prev.colors.filter(c => c !== color)
-                : [...prev.colors, color]
-        }));
-    };
-
-    const toggleDiscount = (discount: string) => {
-        setFilters(prev => ({
-            ...prev,
-            discounts: prev.discounts.includes(discount)
-                ? prev.discounts.filter(d => d !== discount)
-                : [...prev.discounts, discount]
+            colorId: prev.colorId === id ? null : id
         }));
     };
 
@@ -124,17 +117,19 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters,
 
                             {/* Color Section */}
                             <View style={styles.section}>
-                                <Text variant="titleMedium" style={styles.sectionTitle}>Color</Text>
+                                <Text variant="titleMedium" style={styles.sectionTitle}>Màu sắc</Text>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                    {AVAILABLE_COLORS.map(color => {
-                                        const isSelected = filters.colors.includes(color);
+                                    {colors.map(color => {
+                                        const isSelected = filters.colorId === color.id;
+                                        const isWhite = color.hexCode.toUpperCase() === '#FFFFFF';
                                         return (
                                             <TouchableOpacity
-                                                key={color}
-                                                onPress={() => toggleColor(color)}
+                                                key={color.id}
+                                                onPress={() => toggleColor(color.id)}
                                                 style={[
                                                     styles.colorCircle,
-                                                    { backgroundColor: color },
+                                                    { backgroundColor: color.hexCode },
+                                                    isWhite && styles.whiteColorCircle,
                                                     isSelected && styles.colorCircleSelected
                                                 ]}
                                             />
@@ -143,45 +138,23 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters,
                                 </ScrollView>
                             </View>
 
-                            {/* Star Rating */}
+                            {/* Size Section */}
                             <View style={styles.section}>
-                                <Text variant="titleMedium" style={styles.sectionTitle}>Star Rating</Text>
-                                <View style={styles.ratingRow}>
-                                    {RATINGS.map(rating => {
-                                        const isSelected = filters.rating === rating;
-                                        return (
-                                            <TouchableOpacity
-                                                key={rating}
-                                                onPress={() => setFilters(prev => ({ ...prev, rating: isSelected ? null : rating }))}
-                                                style={[
-                                                    styles.ratingBtn,
-                                                    isSelected && { backgroundColor: '#1E1E1E', borderColor: '#1E1E1E' }
-                                                ]}
-                                            >
-                                                <Text style={{ color: isSelected ? 'white' : '#1E1E1E' }}>⭐ {rating}</Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
-                            </View>
-
-                            {/* Discount */}
-                            <View style={styles.section}>
-                                <Text variant="titleMedium" style={styles.sectionTitle}>Discount</Text>
+                                <Text variant="titleMedium" style={styles.sectionTitle}>Kích thước</Text>
                                 <View style={styles.discountGrid}>
-                                    {DISCOUNTS.map(d => {
-                                        const isSelected = filters.discounts.includes(d);
+                                    {sizes.map(size => {
+                                        const isSelected = filters.sizeId === size.id;
                                         return (
                                             <TouchableOpacity
-                                                key={d}
-                                                onPress={() => toggleDiscount(d)}
+                                                key={size.id}
+                                                onPress={() => setFilters(prev => ({ ...prev, sizeId: isSelected ? null : size.id }))}
                                                 style={[
                                                     styles.discountChip,
                                                     isSelected && { backgroundColor: '#1E1E1E', borderColor: '#1E1E1E' }
                                                 ]}
                                             >
                                                 <Text style={{ color: isSelected ? 'white' : '#1E1E1E' }}>
-                                                    {d} {isSelected ? 'x' : ''}
+                                                    {size.name}
                                                 </Text>
                                             </TouchableOpacity>
                                         );
@@ -251,29 +224,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     colorCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         marginRight: 12,
         borderWidth: 1,
         borderColor: 'transparent',
     },
+    whiteColorCircle: {
+        borderColor: '#E0E0E0',
+        borderStyle: 'dashed',
+    },
     colorCircleSelected: {
-        borderColor: '#000',
-        borderWidth: 2,
-    },
-    ratingRow: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    ratingBtn: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderColor: '#3a7435ff',
+        borderWidth: 2.5,
+        borderStyle: 'solid',
     },
     discountGrid: {
         flexDirection: 'row',

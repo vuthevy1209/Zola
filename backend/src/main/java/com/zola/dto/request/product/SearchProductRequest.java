@@ -17,6 +17,7 @@ public class SearchProductRequest {
     BigDecimal minPrice;
     BigDecimal maxPrice;
     Integer colorId;
+    Integer sizeId;
     @Builder.Default
     int page = 0;
     @Builder.Default

@@ -18,8 +18,20 @@ export interface SearchFilters {
     minPrice?: number;
     maxPrice?: number;
     colorId?: number;
+    sizeId?: number;
     page?: number;
     size?: number;
+}
+
+export interface Color {
+    id: number;
+    name: string;
+    hexCode: string;
+}
+
+export interface Size {
+    id: number;
+    name: string;
 }
 
 export interface Category {
@@ -99,5 +111,15 @@ export const productService = {
 
     async clearSearchHistory(): Promise<void> {
         await api.delete('/search-history');
+    },
+
+    async getColors(): Promise<Color[]> {
+        const response = await api.get('/attributes/colors');
+        return response.data.result;
+    },
+
+    async getSizes(): Promise<Size[]> {
+        const response = await api.get('/attributes/sizes');
+        return response.data.result;
     },
 };

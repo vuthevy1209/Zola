@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, Dimensions, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Searchbar, Text, useTheme, Card, ActivityIndicator, IconButton } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
-import { productService, Product, Category, SearchHistory, SearchFilters, getProductPrimaryImage } from '@/services/product.service';
+import { productService, Product, Category, SearchHistory, SearchFilters, getProductPrimaryImage, Color, Size } from '@/services/product.service';
 import FilterModal, { FilterState } from '@/components/filter-modal';
 
 const { width } = Dimensions.get('window');
@@ -20,17 +20,31 @@ export default function SearchScreen() {
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [colors, setColors] = useState<Color[]>([]);
+    const [sizes, setSizes] = useState<Size[]>([]);
     const [history, setHistory] = useState<SearchHistory[]>([]);
     const [filterVisible, setFilterVisible] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [filters, setFilters] = useState<FilterState>({
-        minPrice: '', maxPrice: '', colors: [], rating: null, category: null, discounts: []
+        minPrice: '', maxPrice: '', colorId: null, sizeId: null, category: null
     });
     const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
-        productService.getCategories().then(setCategories);
-        fetchHistory();
+        const init = async () => {
+            try {
+                const [cats, colorsData, sizesData] = await Promise.all([
+                    productService.getCategories(),
+                    productService.getColors(),
+                    productService.getSizes(),
+                ]);
+                setCategories(cats);
+                setColors(colorsData);
+                setSizes(sizesData);
+                fetchHistory();
+            } catch (e) {}
+        };
+        init();
     }, []);
 
     const fetchHistory = async () => {
@@ -55,6 +69,8 @@ export default function SearchScreen() {
     };
 
     const doSearch = (query: string, f: FilterState = filters, pageNumber = 0, append = false) => {
+        setIsInputFocused(false);
+        Keyboard.dismiss();
         loadProducts(query, f, pageNumber, append);
     };
 
@@ -67,6 +83,8 @@ export default function SearchScreen() {
             const searchPayload: SearchFilters = {
                 keyword: query.trim() !== '' ? query.trim() : undefined,
                 categoryId: f.category ?? undefined,
+                colorId: f.colorId ?? undefined,
+                sizeId: f.sizeId ?? undefined,
                 minPrice: f.minPrice ? Number(f.minPrice) : undefined,
                 maxPrice: f.maxPrice ? Number(f.maxPrice) : undefined,
                 page: pageNumber,
@@ -125,7 +143,17 @@ export default function SearchScreen() {
             <View style={styles.header}>
                 <IconButton icon="arrow-left" iconColor="#1E1E1E" onPress={() => router.back()} style={{ marginLeft: 8 }} />
                 <View style={styles.searchBarContainer}>
-                    <IconButton icon="magnify" size={20} iconColor="#666" style={{ margin: 0, marginRight: 4 }} />
+                    <IconButton 
+                        icon="magnify" 
+                        size={20} 
+                        iconColor="#666" 
+                        style={{ margin: 0, marginRight: 4 }}
+                        onPress={() => {
+                            if (searchQuery.trim() === '') return;
+                            setSubmittedQuery(searchQuery);
+                            doSearch(searchQuery);
+                        }}
+                    />
                     <TextInput
                         placeholder="Tìm kiếm sản phẩm..."
                         placeholderTextColor="#888"
@@ -153,6 +181,7 @@ export default function SearchScreen() {
                                 setSubmittedQuery('');
                                 setResults([]);
                                 setHasSearched(false);
+                                Keyboard.dismiss(); // Added Keyboard.dismiss()
                             }}
                             style={{ margin: 0 }}
                         />
@@ -178,6 +207,8 @@ export default function SearchScreen() {
                 onClose={() => setFilterVisible(false)}
                 initialFilters={filters}
                 categories={categories}
+                colors={colors}
+                sizes={sizes}
                 onApply={(newFilters) => {
                     setFilters(newFilters);
                     setFilterVisible(false);

@@ -20,12 +20,14 @@ public interface ProductRepository extends JpaRepository<Product, String> {
            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
            "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
            "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
-           "AND (:colorId IS NULL OR v.color.id = :colorId)")
+           "AND (:colorId IS NULL OR v.color.id = :colorId) " +
+           "AND (:sizeId IS NULL OR v.size.id = :sizeId)")
     Page<Product> searchProducts(
             @Param("keyword") String keyword,
             @Param("categoryId") Integer categoryId,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("colorId") Integer colorId,
+            @Param("sizeId") Integer sizeId,
             Pageable pageable);
 }

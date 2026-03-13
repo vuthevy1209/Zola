@@ -126,6 +126,7 @@ public class ProductServiceImpl implements ProductService {
                         request.getMinPrice(),
                         request.getMaxPrice(),
                         request.getColorId(),
+                        request.getSizeId(),
                         PageRequest.of(request.getPage(), request.getSize()))
                 .map(this::mapToResponse);
     }
