@@ -23,4 +23,5 @@ public class ProductResponse {
     CategoryResponse category;
     List<ProductImageResponse> images;
     List<ProductVariantResponse> variants;
+    Long favoriteCount;
 }

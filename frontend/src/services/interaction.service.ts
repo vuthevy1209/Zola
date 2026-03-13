@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from './api';
 import { Product } from './product.service';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -12,8 +12,6 @@ export interface Review {
     comment: string;
     createdAt: string;
 }
-
-const LIKED_PRODUCTS_KEY = '@zola_likes';
 
 export const interactionService = {
     async getReviews(productId: string): Promise<Review[]> {
@@ -37,8 +35,8 @@ export const interactionService = {
 
     async getFavorites(): Promise<Product[]> {
         try {
-            const data = await AsyncStorage.getItem(LIKED_PRODUCTS_KEY);
-            return data ? JSON.parse(data) : [];
+            const response = await api.get('/favorite-products');
+            return response.data.result;
         } catch {
             return [];
         }
@@ -46,19 +44,9 @@ export const interactionService = {
 
     async toggleFavorite(product: Product): Promise<boolean> {
         try {
-            let favorites = await this.getFavorites();
-            const existing = favorites.find(p => p.id === product.id);
-            let isLiked = false;
-
-            if (existing) {
-                favorites = favorites.filter(p => p.id !== product.id);
-            } else {
-                favorites.push(product);
-                isLiked = true;
-            }
-
-            await AsyncStorage.setItem(LIKED_PRODUCTS_KEY, JSON.stringify(favorites));
-            return isLiked;
+            await api.post(`/favorite-products/${product.id}/toggle`);
+            const isFavorite = await this.checkIsFavorite(product.id);
+            return isFavorite;
         } catch (e) {
             console.error('Toggle favorite failed', e);
             return false;
@@ -66,7 +54,11 @@ export const interactionService = {
     },
 
     async checkIsFavorite(productId: string): Promise<boolean> {
-        const favorites = await this.getFavorites();
-        return favorites.some(p => p.id === productId);
+        try {
+            const response = await api.get(`/favorite-products/${productId}/check`);
+            return response.data.result;
+        } catch {
+            return false;
+        }
     }
 };

@@ -182,6 +182,14 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(id);
     }
 
+    @Override
+    public List<ProductResponse> getHotProducts() {
+        return productRepository.findTop10ByOrderByFavoriteCountDesc(PageRequest.of(0, 10))
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private ProductResponse mapToResponse(Product product) {
         CategoryResponse categoryResponse = CategoryResponse.builder()
                 .id(product.getCategory().getId())
@@ -228,6 +236,7 @@ public class ProductServiceImpl implements ProductService {
                 .category(categoryResponse)
                 .images(imageResponses)
                 .variants(variantResponses)
+                .favoriteCount(product.getFavoriteCount())
                 .build();
     }
 }

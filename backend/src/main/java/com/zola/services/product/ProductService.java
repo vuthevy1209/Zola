@@ -19,4 +19,5 @@ public interface ProductService {
     ProductResponse getProduct(String id);
     ProductResponse updateProduct(String id, ProductRequest request);
     void deleteProduct(String id);
+    List<ProductResponse> getHotProducts();
 }

@@ -122,4 +122,9 @@ export const productService = {
         const response = await api.get('/attributes/sizes');
         return response.data.result;
     },
+
+    async getHotProducts(): Promise<Product[]> {
+        const response = await api.get('/products/hot-products');
+        return response.data.result;
+    },
 };

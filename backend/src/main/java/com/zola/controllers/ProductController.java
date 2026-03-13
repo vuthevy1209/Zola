@@ -88,4 +88,11 @@ public class ProductController {
                 .result("Product deleted successfully")
                 .build();
     }
+
+    @GetMapping("/hot-products")
+    public ApiResponse<List<ProductResponse>> getHotProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getHotProducts())
+                .build();
+    }
 }

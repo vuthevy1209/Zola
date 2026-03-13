@@ -3,6 +3,7 @@ package com.zola.repository;
 import com.zola.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,9 @@ import java.math.BigDecimal;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
     Page<Product> findByCategoryId(Integer categoryId, Pageable pageable);
+
+    @Query("SELECT p FROM Product p ORDER BY p.favoriteCount DESC")
+    List<Product> findTop10ByOrderByFavoriteCountDesc(Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN p.variants v " +

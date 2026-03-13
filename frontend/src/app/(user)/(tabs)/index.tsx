@@ -31,10 +31,14 @@ export default function HomeScreen() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const prods = await productService.getProducts(0);
-      setCategories(await productService.getCategories());
+      const [prods, cats, hot] = await Promise.all([
+        productService.getProducts(0),
+        productService.getCategories(),
+        productService.getHotProducts()
+      ]);
+      setCategories(cats);
       setProducts(prods.content);
-      setHotProducts(prods.content.slice(0, 5));
+      setHotProducts(hot);
       setHasMore(!prods.last);
       setPage(0);
     } catch (error) {
