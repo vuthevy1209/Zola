@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
+import { profileService } from '@/services/profile.service';
 
 type ModalState = { visible: boolean; success: boolean; message: string };
 
@@ -43,7 +44,7 @@ export default function ProfileSettingsScreen() {
         setAvatarUri(uri);
         setUploadingAvatar(true);
         try {
-            const newAvatarUrl = await authService.uploadAvatar(uri);
+            const newAvatarUrl = await profileService.uploadAvatar(uri);
             await updateUserContext({ ...user!, avatarUrl: newAvatarUrl });
         } catch (err: any) {
             const msg = err.response?.data?.message || 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.';
@@ -70,7 +71,7 @@ export default function ProfileSettingsScreen() {
 
         setLoading(true);
         try {
-            const updatedUser = await authService.updateProfile(user.id, {
+            const updatedUser = await profileService.updateProfile({
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
                 phone: phone.trim(),

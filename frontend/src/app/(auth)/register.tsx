@@ -1,31 +1,48 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { authService } from '@/services/auth.service';
-import OtpInput from '@/components/ui/otp-Input';
+import { authService, UserCreationRequest } from '@/services/auth.service';
+import { RegisterInit } from '@/components/auth/register/register-init';
+import { RegisterVerify } from '@/components/auth/register/register-verify';
 
 export default function RegisterScreen() {
+    // step 1: register init, step 2: register verify
     const [step, setStep] = useState<1 | 2>(1);
-    const [username, setUsername] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
+
+    // info: user creation request
+    const [formData, setFormData] = useState<UserCreationRequest>({
+        username: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        password: '',
+    });
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // otp
     const [otp, setOtp] = useState('');
+
+    // loading
     const [loading, setLoading] = useState(false);
+
+    // error
     const [error, setError] = useState('');
 
     const router = useRouter();
     const { signIn } = useAuth();
     const theme = useTheme();
 
+    const updateFormData = (field: keyof UserCreationRequest, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
     const handleRequestOTP = async () => {
+        const { username, firstName, lastName, email, phone, password } = formData;
         if (!username || !firstName || !lastName || !email || !phone || !password || !confirmPassword) {
             setError('Vui lòng nhập đầy đủ thông tin');
             return;
@@ -39,7 +56,7 @@ export default function RegisterScreen() {
         setLoading(true);
         setError('');
         try {
-            await authService.register({ username, email, phone, firstName, lastName, password });
+            await authService.register(formData);
             setStep(2);
         } catch (err: any) {
             setError(err.response?.data?.message || err.message || 'Đã có lỗi xảy ra');
@@ -48,7 +65,7 @@ export default function RegisterScreen() {
         }
     };
 
-    const handleVerifyOTP = async () => {
+    const verifyOTPAndRegister = async () => {
         if (!otp) {
             setError('Vui lòng nhập mã OTP');
             return;
@@ -57,7 +74,7 @@ export default function RegisterScreen() {
         setLoading(true);
         setError('');
         try {
-            const response = await authService.verifyOTPAndRegister(email, otp);
+            const response = await authService.verifyOTPAndRegister(formData.email, otp);
             await signIn(response);
         } catch (err: any) {
             setError(err.response?.data?.message || err.message || 'OTP không hợp lệ');
@@ -79,124 +96,27 @@ export default function RegisterScreen() {
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                     {step === 1 ? (
-                        <>
-                            <TextInput
-                                label="Tên đăng nhập"
-                                value={username}
-                                onChangeText={setUsername}
-                                autoCapitalize="none"
-                                style={styles.input}
-                                mode="outlined"
-                            />
-
-                            <View style={styles.row}>
-                                <TextInput
-                                    label="Họ"
-                                    value={lastName}
-                                    onChangeText={setLastName}
-                                    style={[styles.input, { flex: 1, marginRight: 8 }]}
-                                    mode="outlined"
-                                />
-                                <TextInput
-                                    label="Tên"
-                                    value={firstName}
-                                    onChangeText={setFirstName}
-                                    style={[styles.input, { flex: 1 }]}
-                                    mode="outlined"
-                                />
-                            </View>
-
-                            <TextInput
-                                label="Email"
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                style={styles.input}
-                                mode="outlined"
-                            />
-
-                            <TextInput
-                                label="Số điện thoại"
-                                value={phone}
-                                onChangeText={setPhone}
-                                keyboardType="phone-pad"
-                                style={styles.input}
-                                mode="outlined"
-                            />
-
-                            <TextInput
-                                label="Mật khẩu"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={!showPassword}
-                                style={styles.input}
-                                mode="outlined"
-                                right={
-                                    <TextInput.Icon
-                                        icon={showPassword ? 'eye-off' : 'eye'}
-                                        onPress={() => setShowPassword(v => !v)}
-                                    />
-                                }
-                            />
-
-                            <TextInput
-                                label="Xác nhận mật khẩu"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry={!showConfirmPassword}
-                                style={styles.input}
-                                mode="outlined"
-                                right={
-                                    <TextInput.Icon
-                                        icon={showConfirmPassword ? 'eye-off' : 'eye'}
-                                        onPress={() => setShowConfirmPassword(v => !v)}
-                                    />
-                                }
-                            />
-
-                            <Button
-                                mode="contained"
-                                onPress={handleRequestOTP}
-                                loading={loading}
-                                disabled={loading}
-                                style={styles.button}
-                            >
-                                Tiếp tục
-                            </Button>
-                        </>
+                        <RegisterInit
+                            formData={formData}
+                            updateFormData={updateFormData}
+                            confirmPassword={confirmPassword}
+                            setConfirmPassword={setConfirmPassword}
+                            showPassword={showPassword}
+                            setShowPassword={setShowPassword}
+                            showConfirmPassword={showConfirmPassword}
+                            setShowConfirmPassword={setShowConfirmPassword}
+                            onContinue={handleRequestOTP}
+                            loading={loading}
+                        />
                     ) : (
-                        <>
-                            <Text style={{ marginBottom: 28, textAlign: 'center', color: '#555' }}>
-                                Mã OTP đã được gửi đến{' '}
-                                <Text style={{ fontWeight: 'bold', color: '#1D1D1D' }}>{email}</Text>
-                            </Text>
-
-                            <OtpInput
-                                value={otp}
-                                onChange={setOtp}
-                                primaryColor={theme.colors.primary}
-                            />
-
-                            <Button
-                                mode="contained"
-                                onPress={handleVerifyOTP}
-                                loading={loading}
-                                disabled={loading}
-                                style={styles.button}
-                            >
-                                Xác nhận & Đăng ký
-                            </Button>
-
-                            <Button
-                                mode="text"
-                                onPress={() => setStep(1)}
-                                disabled={loading}
-                                style={{ marginTop: 8 }}
-                            >
-                                Quay lại
-                            </Button>
-                        </>
+                        <RegisterVerify
+                            email={formData.email}
+                            otp={otp}
+                            setOtp={setOtp}
+                            onVerify={verifyOTPAndRegister}
+                            onBack={() => setStep(1)}
+                            loading={loading}
+                        />
                     )}
 
                     <View style={styles.loginContainer}>
@@ -235,13 +155,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 32,
         opacity: 0.7,
-    },
-    row: {
-        flexDirection: 'row',
-        marginBottom: 0,
-    },
-    input: {
-        marginBottom: 16,
     },
     button: {
         marginTop: 8,

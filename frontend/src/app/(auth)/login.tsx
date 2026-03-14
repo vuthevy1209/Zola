@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
+import { LoginForm } from '@/components/auth/login/login-form';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -28,8 +29,7 @@ export default function LoginScreen() {
             const response = await authService.login(email, password);
             await signIn(response);
         } catch (err: any) {
-
-            setError(err.message || 'Đăng nhập thất bại');
+            setError(err.response?.data?.message || err.message || 'Đăng nhập thất bại');
         } finally {
             setLoading(false);
         }
@@ -46,49 +46,16 @@ export default function LoginScreen() {
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                <TextInput
-                    label="Tên đăng nhập hoặc Số điện thoại"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="default"
-                    style={styles.input}
-                    mode="outlined"
-                />
-
-                <TextInput
-                    label="Mật khẩu"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    style={styles.input}
-                    mode="outlined"
-                    right={
-                        <TextInput.Icon
-                            icon={showPassword ? 'eye-off' : 'eye'}
-                            onPress={() => setShowPassword(v => !v)}
-                        />
-                    }
-                />
-
-                <View style={styles.forgotPasswordContainer}>
-                    <Text
-                        style={{ color: theme.colors.primary }}
-                        onPress={() => router.push('/(auth)/forgot-password')}
-                    >
-                        Quên mật khẩu?
-                    </Text>
-                </View>
-
-                <Button
-                    mode="contained"
-                    onPress={handleLogin}
+                <LoginForm
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    showPassword={showPassword}
+                    setShowPassword={setShowPassword}
+                    onLogin={handleLogin}
                     loading={loading}
-                    disabled={loading}
-                    style={styles.button}
-                >
-                    Đăng nhập
-                </Button>
+                />
 
                 <View style={styles.registerContainer}>
                     <Text>Chưa có tài khoản? </Text>
@@ -123,21 +90,10 @@ const styles = StyleSheet.create({
         marginBottom: 32,
         opacity: 0.7,
     },
-    input: {
-        marginBottom: 16,
-    },
-    button: {
-        marginTop: 8,
-        paddingVertical: 6,
-    },
     errorText: {
         color: 'red',
         marginBottom: 16,
         textAlign: 'center',
-    },
-    forgotPasswordContainer: {
-        alignItems: 'flex-end',
-        marginBottom: 24,
     },
     registerContainer: {
         flexDirection: 'row',

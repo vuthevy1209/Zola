@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import OtpInput from '@/components/ui/otp-Input';
+import OtpInput from '@/components/ui/otp-input';
 
 interface ForgotPasswordVerifyProps {
     otp: string;

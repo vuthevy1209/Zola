@@ -6,10 +6,10 @@ import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { authService } from '@/services/auth.service';
 
-import { ForgotPasswordInit } from '@/components/auth/forgot-password/ForgotPasswordInit';
-import { ForgotPasswordVerify } from '@/components/auth/forgot-password/ForgotPasswordVerify';
-import { ForgotPasswordReset } from '@/components/auth/forgot-password/ForgotPasswordReset';
-import { ForgotPasswordSuccess } from '@/components/auth/forgot-password/ForgotPasswordSuccess';
+import { ForgotPasswordInit } from '@/components/auth/forgot-password/forgot-password-init';
+import { ForgotPasswordVerify } from '@/components/auth/forgot-password/forgot-password-verify';
+import { ForgotPasswordReset } from '@/components/auth/forgot-password/forgot-password-reset';
+import { ForgotPasswordSuccess } from '@/components/auth/forgot-password/forgot-password-success';
 
 const OTP_RESEND_SECONDS = 60;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()\{\}\[\]!~`|])(?=.*\d).*$/;

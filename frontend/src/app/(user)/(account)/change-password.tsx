@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, useTheme } from 'react-native-paper';
+import { Text, Button, useTheme } from 'react-native-paper';
 import { useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import { authService } from '@/services/auth.service';
-import OtpInput from '@/components/ui/otp-Input';
+import { profileService } from '@/services/profile.service';
+import { ChangePasswordVerify } from '@/components/auth/change-password/change-password-verify';
+import { ChangePasswordForm } from '@/components/auth/change-password/change-password-form';
 
 const RESEND_SECONDS = 60;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()\{\}\[\]!~`|])(?=.*\d).*$/;
@@ -33,7 +34,7 @@ export default function ChangePasswordScreen() {
     const [showConfirm, setShowConfirm] = useState(false);
 
     // ui state
-    const [sending, setSending] = useState(true);   // initial auto-send
+    const [sending, setSending] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [countdown, setCountdown] = useState(0);
@@ -51,17 +52,16 @@ export default function ChangePasswordScreen() {
         }, 1000);
     };
 
-    // auto-send OTP on mount
     useEffect(() => {
         sendOtp();
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     const sendOtp = async () => {
         setSending(true);
         setError('');
         try {
-            await authService.sendChangePasswordOtp();
+            await profileService.sendChangePasswordOtp();
             startCountdown();
         } catch (err: any) {
             setError(err.response?.data?.message || 'Không thể gửi OTP. Vui lòng thử lại.');
@@ -76,7 +76,6 @@ export default function ChangePasswordScreen() {
         await sendOtp();
     };
 
-    // Step 1 → Step 2: validate OTP length only (actual verify happens on submit)
     const handleConfirmOtp = () => {
         if (otp.length !== 6) {
             setError('Vui lòng nhập đúng mã OTP 6 chữ số');
@@ -107,11 +106,10 @@ export default function ChangePasswordScreen() {
         setLoading(true);
         setError('');
         try {
-            await authService.changePassword(otp.trim(), newPassword);
+            await profileService.changePassword(otp.trim(), newPassword);
             setModal({ visible: true, success: true, message: 'Mật khẩu đã được thay đổi thành công!' });
         } catch (err: any) {
             const msg = err.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.';
-            // If OTP-related error, go back to step 1
             if (msg.toLowerCase().includes('otp') || msg.toLowerCase().includes('invalid')) {
                 setStep(1);
                 setOtp('');
@@ -135,7 +133,6 @@ export default function ChangePasswordScreen() {
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => step === 2 ? (setStep(1), setError('')) : router.back()}
@@ -150,7 +147,6 @@ export default function ChangePasswordScreen() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                    {/* Info banner */}
                     <View style={styles.infoBanner}>
                         <MaterialCommunityIcons name="shield-lock-outline" size={32} color={theme.colors.primary} />
                         <Text style={styles.infoText}>
@@ -162,84 +158,24 @@ export default function ChangePasswordScreen() {
 
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                    {/* ── Step 1: OTP ──────────────────────────────────── */}
-                    {step === 1 && (
-                        <>
-                            <OtpInput
-                                value={otp}
-                                onChange={setOtp}
-                                primaryColor={theme.colors.primary}
-                            />
-
-                            <View style={styles.resendRow}>
-                                <Text style={styles.resendLabel}>Không nhận được mã? </Text>
-                                {countdown > 0 ? (
-                                    <Text style={styles.countdown}>Gửi lại sau {countdown}s</Text>
-                                ) : (
-                                    <Text
-                                        style={[styles.resendLink, { color: theme.colors.primary }]}
-                                        onPress={handleResend}
-                                    >
-                                        Gửi lại
-                                    </Text>
-                                )}
-                            </View>
-                        </>
-                    )}
-
-                    {/* ── Step 2: New password ─────────────────────────── */}
-                    {step === 2 && (
-                        <>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Mật khẩu mới</Text>
-                                <TextInput
-                                    value={newPassword}
-                                    onChangeText={setNewPassword}
-                                    secureTextEntry={!showNew}
-                                    style={styles.input}
-                                    textColor="#1D1D1D"
-                                    cursorColor="#1D1D1D"
-                                    underlineColor="transparent"
-                                    activeUnderlineColor="transparent"
-                                    theme={{ colors: { background: 'transparent' } }}
-                                    right={
-                                        <TextInput.Icon
-                                            icon={showNew ? 'eye-off' : 'eye'}
-                                            onPress={() => setShowNew(v => !v)}
-                                            color="#999"
-                                        />
-                                    }
-                                />
-                                <View style={styles.bottomLine} />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Xác nhận mật khẩu mới</Text>
-                                <TextInput
-                                    value={confirmPassword}
-                                    onChangeText={setConfirmPassword}
-                                    secureTextEntry={!showConfirm}
-                                    style={styles.input}
-                                    textColor="#1D1D1D"
-                                    cursorColor="#1D1D1D"
-                                    underlineColor="transparent"
-                                    activeUnderlineColor="transparent"
-                                    theme={{ colors: { background: 'transparent' } }}
-                                    right={
-                                        <TextInput.Icon
-                                            icon={showConfirm ? 'eye-off' : 'eye'}
-                                            onPress={() => setShowConfirm(v => !v)}
-                                            color="#999"
-                                        />
-                                    }
-                                />
-                                <View style={styles.bottomLine} />
-                            </View>
-
-                            <Text style={styles.hint}>
-                                Mật khẩu gồm ≥8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.
-                            </Text>
-                        </>
+                    {step === 1 ? (
+                        <ChangePasswordVerify
+                            otp={otp}
+                            setOtp={setOtp}
+                            countdown={countdown}
+                            onResend={handleResend}
+                        />
+                    ) : (
+                        <ChangePasswordForm
+                            newPassword={newPassword}
+                            setNewPassword={setNewPassword}
+                            confirmPassword={confirmPassword}
+                            setConfirmPassword={setConfirmPassword}
+                            showNew={showNew}
+                            setShowNew={setShowNew}
+                            showConfirm={showConfirm}
+                            setShowConfirm={setShowConfirm}
+                        />
                     )}
                 </ScrollView>
 
@@ -271,7 +207,6 @@ export default function ChangePasswordScreen() {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Result Modal */}
             <Modal transparent animationType="fade" visible={modal.visible} onRequestClose={handleModalClose}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
@@ -337,19 +272,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 16,
     },
-    inputGroup: { marginBottom: 24 },
-    label: { fontSize: 12, color: '#A0A0A0', marginBottom: -5, fontWeight: '500' },
-    passwordRow: { flexDirection: 'row', alignItems: 'center' },
-    input: {
-        height: 45, paddingHorizontal: 0,
-        backgroundColor: 'transparent', fontSize: 16, fontWeight: '500',
-    },
-    bottomLine: { height: 1, backgroundColor: '#EAEAEA', width: '100%' },
-    resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 24 },
-    resendLabel: { fontSize: 13, color: '#666' },
-    resendLink: { fontSize: 13, fontWeight: 'bold' },
-    countdown: { fontSize: 13, color: '#999' },
-    hint: { fontSize: 12, color: '#888', lineHeight: 18, marginTop: -8 },
     footer: { paddingHorizontal: 30, paddingBottom: 40, paddingTop: 10 },
     saveBtn: { borderRadius: 30, paddingVertical: 8 },
     saveBtnLabel: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
