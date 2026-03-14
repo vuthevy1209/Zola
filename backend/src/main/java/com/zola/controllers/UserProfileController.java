@@ -1,9 +1,9 @@
 package com.zola.controllers;
 
-import com.zola.dto.request.auth.ChangePasswordRequest;
+import com.zola.dto.request.auth.password.ChangePasswordRequest;
 import com.zola.dto.request.profile.*;
 import com.zola.dto.response.ApiResponse;
-import com.zola.dto.response.UserProfileResponse;
+import com.zola.dto.response.profile.UserProfileResponse;
 import com.zola.services.profile.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;

@@ -1,16 +1,18 @@
 package com.zola.controllers;
 
-import com.zola.dto.request.auth.ForgetPasswordRequest;
-import com.zola.dto.request.auth.ForgotPasswordInitRequest;
+import com.zola.dto.request.auth.password.ResetPasswordRequest;
+import com.zola.dto.request.auth.password.ForgotPasswordInitRequest;
 import com.zola.dto.request.auth.IntrospectRequest;
 import com.zola.dto.request.auth.LoginRequest;
 import com.zola.dto.request.auth.LogoutRequest;
 import com.zola.dto.request.auth.RefreshTokenRequest;
 import com.zola.dto.request.auth.RegisterRequest;
+import com.zola.dto.request.auth.password.VerifyForgotPasswordOtpRequest;
+import com.zola.dto.response.auth.ResetTokenResponse;
 import com.zola.dto.request.otp.VerifyOtpRequest;
 import com.zola.dto.response.ApiResponse;
-import com.zola.dto.response.AuthResponse;
-import com.zola.dto.response.IntrospectResponse;
+import com.zola.dto.response.auth.AuthResponse;
+import com.zola.dto.response.auth.IntrospectResponse;
 import com.zola.services.authentication.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -25,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class AuthController {
+public class AuthenticationController {
 
     AuthenticationService authenticationService;
 
@@ -82,9 +84,20 @@ public class AuthController {
                 .build();
     }
 
-    @PostMapping("/forget-password")
-    public ApiResponse<Void> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
-        authenticationService.forgetPassword(request);
+    @PostMapping("/forgot-password/verify")
+    public ApiResponse<ResetTokenResponse> verifyForgotPasswordOtp(@RequestBody @Valid VerifyForgotPasswordOtpRequest request) {
+        String resetToken = authenticationService.verifyForgotPasswordOtp(request.getIdentifier(), request.getOtpCode());
+        return ApiResponse.<ResetTokenResponse>builder()
+                .result(ResetTokenResponse.builder()
+                        .resetToken(resetToken)
+                        .build())
+                .message("OTP verified successfully.")
+                .build();
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public ApiResponse<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        authenticationService.resetPassword(request);
         return ApiResponse.<Void>builder()
                 .message("Password has been reset successfully")
                 .build();

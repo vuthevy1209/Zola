@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Searchbar, Text, useTheme, Card, ActivityIndicator, IconButton } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
 import { productService, Product, Category, SearchHistory, SearchFilters, getProductPrimaryImage, Color, Size } from '@/services/product.service';
-import FilterModal, { FilterState } from '@/components/filter-modal';
+import FilterModal, { FilterState } from '@/components/products/filter-modal';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width / 2 - 16;

@@ -4,7 +4,7 @@ import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
-import OtpInput from '@/components/OtpInput';
+import OtpInput from '@/components/ui/otp-Input';
 
 export default function RegisterScreen() {
     const [step, setStep] = useState<1 | 2>(1);

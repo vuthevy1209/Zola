@@ -1,6 +1,6 @@
 package com.zola.mapper;
 
-import com.zola.dto.response.UserProfileResponse;
+import com.zola.dto.response.profile.UserProfileResponse;
 import com.zola.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

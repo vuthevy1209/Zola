@@ -1,6 +1,5 @@
-package com.zola.services.productvariant;
+package com.zola.services.product;
 
-import com.zola.dto.request.product.ProductVariantRequest;
 import com.zola.dto.response.product.ProductVariantResponse;
 
 public interface ProductVariantService {

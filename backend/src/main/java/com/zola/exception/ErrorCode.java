@@ -25,6 +25,8 @@ public enum ErrorCode {
     INCORRECT_PASSWORD("incorrect-password", "Incorrect password", HttpStatus.BAD_REQUEST),
     SAME_PASSWORD("same-password", "New password cannot be the same as old password", HttpStatus.BAD_REQUEST),
     ADDRESS_NOT_FOUND("address-not-found", "Address not found", HttpStatus.NOT_FOUND),
+    TOO_MANY_REQUESTS("too-many-requests", "Too many failed attempts. Please try again later.", HttpStatus.TOO_MANY_REQUESTS),
+    INVALID_TOKEN("invalid-token", "Invalid or expired reset token.", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {

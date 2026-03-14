@@ -1,7 +1,7 @@
 package com.zola.services.address;
 
 import com.zola.dto.request.profile.AddressRequest;
-import com.zola.dto.response.AddressResponse;
+import com.zola.dto.response.address.AddressResponse;
 import com.zola.entity.Address;
 import com.zola.entity.User;
 import com.zola.exception.AppException;

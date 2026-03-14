@@ -6,7 +6,7 @@ import { useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
-import OtpInput from '@/components/OtpInput';
+import OtpInput from '@/components/ui/otp-Input';
 
 const RESEND_SECONDS = 60;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()\{\}\[\]!~`|])(?=.*\d).*$/;

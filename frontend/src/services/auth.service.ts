@@ -49,13 +49,18 @@ export const authService = {
 
     async initForgotPassword(identifier: string): Promise<string> {
         const response = await api.post('/auth/forgot-password/init', { identifier });
-        return response.data.result; // masked email
+        return response.data.result;
     },
 
-    async resetPassword(identifier: string, otp: string, newPassword: string): Promise<void> {
-        await api.post('/auth/forget-password', {
+    async verifyForgotPasswordOtp(identifier: string, otp: string): Promise<string> {
+        const response = await api.post('/auth/forgot-password/verify', { identifier, otpCode: otp });
+        return response.data.result.resetToken;
+    },
+
+    async resetForgotPassword(identifier: string, resetToken: string, newPassword: string): Promise<void> {
+        await api.post('/auth/forgot-password/reset', {
             identifier,
-            otpCode: otp,
+            resetToken,
             newPassword
         });
     },

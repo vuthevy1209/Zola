@@ -1,7 +1,7 @@
 package com.zola.services.role;
 
-import com.zola.dto.request.RoleCreationRequest;
-import com.zola.dto.response.RoleResponse;
+import com.zola.dto.request.auth.RoleCreationRequest;
+import com.zola.dto.response.auth.RoleResponse;
 import com.zola.entity.Role;
 import com.zola.mapper.RoleMapper;
 import com.zola.repository.RoleRepository;

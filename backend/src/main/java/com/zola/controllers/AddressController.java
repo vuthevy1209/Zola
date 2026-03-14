@@ -1,7 +1,7 @@
 package com.zola.controllers;
 
 import com.zola.dto.request.profile.AddressRequest;
-import com.zola.dto.response.AddressResponse;
+import com.zola.dto.response.address.AddressResponse;
 import com.zola.dto.response.ApiResponse;
 import com.zola.services.address.AddressService;
 import jakarta.validation.Valid;

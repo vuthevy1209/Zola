@@ -1,14 +1,13 @@
-package com.zola.dto.response;
+package com.zola.dto.response.auth;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectResponse {
-    boolean valid;
+public class ResetTokenResponse {
+    String resetToken;
 }

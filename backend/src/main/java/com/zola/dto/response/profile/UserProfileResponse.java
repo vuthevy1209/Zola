@@ -1,4 +1,4 @@
-package com.zola.dto.response;
+package com.zola.dto.response.profile;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

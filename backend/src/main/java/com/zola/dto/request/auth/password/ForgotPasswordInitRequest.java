@@ -1,4 +1,4 @@
-package com.zola.dto.request.auth;
+package com.zola.dto.request.auth.password;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;

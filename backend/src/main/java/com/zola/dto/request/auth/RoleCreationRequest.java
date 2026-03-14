@@ -1,4 +1,4 @@
-package com.zola.dto.request;
+package com.zola.dto.request.auth;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

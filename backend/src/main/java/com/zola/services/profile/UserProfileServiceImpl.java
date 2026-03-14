@@ -1,10 +1,8 @@
 package com.zola.services.profile;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
-import com.zola.dto.request.auth.ChangePasswordRequest;
+import com.zola.dto.request.auth.password.ChangePasswordRequest;
 import com.zola.dto.request.profile.*;
-import com.zola.dto.response.UserProfileResponse;
+import com.zola.dto.response.profile.UserProfileResponse;
 import com.zola.entity.User;
 import com.zola.enums.OtpType;
 import com.zola.exception.AppException;
