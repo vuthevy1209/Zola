@@ -27,8 +27,17 @@ export const profileService = {
         await api.post('/profile/send-change-password-otp');
     },
 
-    async changePassword(otpCode: string, newPassword: string): Promise<void> {
-        await api.post('/profile/change-password', { otpCode, newPassword });
+    async verifyChangePasswordOtp(otpCode: string): Promise<string> {
+        const response = await api.post('/profile/verify-change-password-otp', { otpCode });
+        return response.data.result;
+    },
+
+    async changePassword(oldPassword: string, changeToken: string, newPassword: string): Promise<void> {
+        await api.post('/profile/change-password', {
+            oldPassword,
+            changeToken,
+            newPassword,
+        });
     },
 
     async uploadAvatar(imageUri: string): Promise<string> {

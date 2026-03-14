@@ -14,7 +14,8 @@ import com.zola.services.otp.OtpService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.zola.utils.SecurityUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,10 +32,11 @@ public class UserProfileServiceImpl implements UserProfileService {
     PasswordEncoder passwordEncoder;
     OtpService otpService;
     CloudinaryService cloudinaryService;
+    StringRedisTemplate redisTemplate;
 
     @Override
     public UserProfileResponse getMyProfile() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserProfileResponse(user);
@@ -42,7 +44,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public UserProfileResponse updateProfile(UpdateProfileRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -70,29 +72,58 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public void sendChangePasswordOtp() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         otpService.sendOtp(user.getEmail(), OtpType.CHANGE_PASSWORD);
     }
 
     @Override
-    public void changePassword(ChangePasswordRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public String verifyChangePasswordOtp(String otpCode) {
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (!otpService.verifyOtp(user.getEmail(), request.getOtpCode(), OtpType.CHANGE_PASSWORD)) {
+        if (!otpService.verifyOtp(user.getEmail(), otpCode, OtpType.CHANGE_PASSWORD)) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
 
+        String changeToken = java.util.UUID.randomUUID().toString();
+        String redisKey = "change-password:token:" + userId;
+        redisTemplate.opsForValue().set(redisKey, changeToken, 5, java.util.concurrent.TimeUnit.MINUTES);
+
+        return changeToken;
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // 1. Verify change token
+        String redisKey = "change-password:token:" + userId;
+        String storedToken = redisTemplate.opsForValue().get(redisKey);
+        if (storedToken == null || !storedToken.equals(request.getChangeToken())) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // 2. Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INCORRECT_PASSWORD);
+        }
+
+        // 3. Update password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+
+        // 4. Consume token
+        redisTemplate.delete(redisKey);
     }
 
     @Override
     public void changeEmail(ChangeEmailRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -110,7 +141,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public void changePhone(ChangePhoneRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -137,7 +168,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public String uploadAvatar(MultipartFile file) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 

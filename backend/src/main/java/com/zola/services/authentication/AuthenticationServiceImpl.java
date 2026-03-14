@@ -88,6 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return buildAuthResponse(user);
     }
 
+    // login with username, email, or phone
     @Override
     public AuthResponse authenticate(LoginRequest request) {
         User user = userRepository.findByUsername(request.getIdentifier())

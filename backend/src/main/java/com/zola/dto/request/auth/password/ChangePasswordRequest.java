@@ -14,9 +14,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "OTP code is required")
-    @Size(min = 6, max = 6, message = "OTP must be 6 characters")
-    String otpCode;
+    @NotBlank(message = "Old password cannot be blank")
+    String oldPassword;
+
+    @NotBlank(message = "Change token is required")
+    String changeToken;
 
     @NotBlank(message = "New password cannot be blank")
     @Size(min = 8, message = "Password must be at least 8 characters long")

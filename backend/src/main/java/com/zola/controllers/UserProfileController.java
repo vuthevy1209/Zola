@@ -1,6 +1,7 @@
 package com.zola.controllers;
 
 import com.zola.dto.request.auth.password.ChangePasswordRequest;
+import com.zola.dto.request.auth.password.VerifyChangePasswordOtpRequest;
 import com.zola.dto.request.profile.*;
 import com.zola.dto.response.ApiResponse;
 import com.zola.dto.response.profile.UserProfileResponse;
@@ -39,6 +40,13 @@ public class UserProfileController {
         userProfileService.sendChangePasswordOtp();
         return ApiResponse.<Void>builder()
                 .message("OTP has been sent to your email.")
+                .build();
+    }
+
+    @PostMapping("/verify-change-password-otp")
+    public ApiResponse<String> verifyChangePasswordOtp(@RequestBody @Valid VerifyChangePasswordOtpRequest request) {
+        return ApiResponse.<String>builder()
+                .result(userProfileService.verifyChangePasswordOtp(request.getOtpCode()))
                 .build();
     }
 

@@ -28,8 +28,11 @@ export default function ChangePasswordScreen() {
     // form state
     const [step, setStep] = useState<1 | 2>(1);
     const [otp, setOtp] = useState('');
+    const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [changeToken, setChangeToken] = useState('');
+    const [showOld, setShowOld] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -76,17 +79,26 @@ export default function ChangePasswordScreen() {
         await sendOtp();
     };
 
-    const handleConfirmOtp = () => {
+    const handleConfirmOtp = async () => {
         if (otp.length !== 6) {
             setError('Vui lòng nhập đúng mã OTP 6 chữ số');
             return;
         }
+        setLoading(true);
         setError('');
-        setStep(2);
+        try {
+            const token = await profileService.verifyChangePasswordOtp(otp.trim());
+            setChangeToken(token);
+            setStep(2);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSubmit = async () => {
-        if (!newPassword || !confirmPassword) {
+        if (!oldPassword || !newPassword || !confirmPassword) {
             setError('Vui lòng nhập đầy đủ mật khẩu');
             return;
         }
@@ -106,7 +118,7 @@ export default function ChangePasswordScreen() {
         setLoading(true);
         setError('');
         try {
-            await profileService.changePassword(otp.trim(), newPassword);
+            await profileService.changePassword(oldPassword.trim(), changeToken, newPassword);
             setModal({ visible: true, success: true, message: 'Mật khẩu đã được thay đổi thành công!' });
         } catch (err: any) {
             const msg = err.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.';
@@ -167,10 +179,14 @@ export default function ChangePasswordScreen() {
                         />
                     ) : (
                         <ChangePasswordForm
+                            oldPassword={oldPassword}
+                            setOldPassword={setOldPassword}
                             newPassword={newPassword}
                             setNewPassword={setNewPassword}
                             confirmPassword={confirmPassword}
                             setConfirmPassword={setConfirmPassword}
+                            showOld={showOld}
+                            setShowOld={setShowOld}
                             showNew={showNew}
                             setShowNew={setShowNew}
                             showConfirm={showConfirm}
@@ -184,7 +200,8 @@ export default function ChangePasswordScreen() {
                         <Button
                             mode="contained"
                             onPress={handleConfirmOtp}
-                            disabled={sending || otp.length !== 6}
+                            loading={loading}
+                            disabled={loading || sending || otp.length !== 6}
                             style={styles.saveBtn}
                             labelStyle={styles.saveBtnLabel}
                             buttonColor={theme.colors.primary}

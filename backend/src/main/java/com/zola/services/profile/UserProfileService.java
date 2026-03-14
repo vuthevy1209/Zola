@@ -11,9 +11,11 @@ public interface UserProfileService {
 
     UserProfileResponse updateProfile(UpdateProfileRequest request);
 
-    void changePassword(ChangePasswordRequest request);
-
     void sendChangePasswordOtp();
+
+    String verifyChangePasswordOtp(String otpCode);
+
+    void changePassword(ChangePasswordRequest request);
 
     void changeEmail(ChangeEmailRequest request);
 

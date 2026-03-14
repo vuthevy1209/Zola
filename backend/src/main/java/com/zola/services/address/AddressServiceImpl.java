@@ -11,7 +11,7 @@ import com.zola.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.zola.utils.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +27,7 @@ public class AddressServiceImpl implements AddressService {
     UserRepository userRepository;
 
     private User getCurrentUser() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         return userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }

@@ -3,10 +3,14 @@ import { View, StyleSheet } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 
 interface ChangePasswordFormProps {
+    oldPassword: string;
+    setOldPassword: (v: string) => void;
     newPassword: string;
     setNewPassword: (v: string) => void;
     confirmPassword: string;
     setConfirmPassword: (v: string) => void;
+    showOld: boolean;
+    setShowOld: (v: boolean | ((prev: boolean) => boolean)) => void;
     showNew: boolean;
     setShowNew: (v: boolean | ((prev: boolean) => boolean)) => void;
     showConfirm: boolean;
@@ -14,13 +18,37 @@ interface ChangePasswordFormProps {
 }
 
 export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
+    oldPassword, setOldPassword,
     newPassword, setNewPassword,
     confirmPassword, setConfirmPassword,
+    showOld, setShowOld,
     showNew, setShowNew,
     showConfirm, setShowConfirm
 }) => {
     return (
         <View style={styles.container}>
+            <View style={styles.inputGroup}>
+                <Text style={styles.label}>Mật khẩu cũ</Text>
+                <TextInput
+                    value={oldPassword}
+                    onChangeText={setOldPassword}
+                    secureTextEntry={!showOld}
+                    style={styles.input}
+                    textColor="#1D1D1D"
+                    cursorColor="#1D1D1D"
+                    underlineColor="transparent"
+                    activeUnderlineColor="transparent"
+                    theme={{ colors: { background: 'transparent' } }}
+                    right={
+                        <TextInput.Icon
+                            icon={showOld ? 'eye-off' : 'eye'}
+                            onPress={() => setShowOld(v => !v)}
+                            color="#999"
+                        />
+                    }
+                />
+                <View style={styles.bottomLine} />
+            </View>
             <View style={styles.inputGroup}>
                 <Text style={styles.label}>Mật khẩu mới</Text>
                 <TextInput
