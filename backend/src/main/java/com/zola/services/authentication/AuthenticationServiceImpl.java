@@ -63,6 +63,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Value("${jwt.refreshable-duration}")
     long REFRESHABLE_DURATION;
 
+    @NonFinal
+    @Value("${app.default-avatar-url}")
+    String DEFAULT_AVATAR_URL;
+
     @Override
     public void register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -79,7 +83,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phone(request.getPhone())
-                .avatarUrl("https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg")
+                .avatarUrl(DEFAULT_AVATAR_URL)
                 .isActive(false)
                 .role(roleRepository.findByRoleName(PredefinedRole.USER))
                 .build();
@@ -92,7 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public AuthResponse verifyRegister(String email, String otp) {
         if (!otpService.verifyOtp(email, otp, OtpType.REGISTER)) {
-            throw new AppException(ErrorCode.INVALID_KEY); // Or INVALID_OTP
+            throw new AppException(ErrorCode.INVALID_OTP);
         }
 
         User user = userRepository.findByEmail(email)

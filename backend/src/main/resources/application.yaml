@@ -78,3 +78,6 @@ init:
     password: ${ADMIN_PASSWORD:admin}
     email: ${ADMIN_EMAIL:admin@gmail.com}
     phone: ${ADMIN_PHONE:0354802825}
+
+app:
+  default-avatar-url: ${DEFAULT_AVATAR_URL:https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg}
