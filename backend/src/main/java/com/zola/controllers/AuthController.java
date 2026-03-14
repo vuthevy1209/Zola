@@ -6,6 +6,8 @@ import com.zola.dto.request.auth.IntrospectRequest;
 import com.zola.dto.request.auth.LoginRequest;
 import com.zola.dto.request.auth.LogoutRequest;
 import com.zola.dto.request.auth.RefreshTokenRequest;
+import com.zola.dto.request.auth.RegisterRequest;
+import com.zola.dto.request.otp.VerifyOtpRequest;
 import com.zola.dto.response.ApiResponse;
 import com.zola.dto.response.AuthResponse;
 import com.zola.dto.response.IntrospectResponse;
@@ -26,6 +28,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     AuthenticationService authenticationService;
+
+    @PostMapping("/register")
+    public ApiResponse<Void> register(@RequestBody @Valid RegisterRequest request) {
+        authenticationService.register(request);
+        return ApiResponse.<Void>builder()
+                .message("OTP has been sent to your email. Please verify to complete registration.")
+                .build();
+    }
+
+    @PostMapping("/register/verify")
+    public ApiResponse<AuthResponse> verify(@RequestBody @Valid VerifyOtpRequest request) {
+        return ApiResponse.<AuthResponse>builder()
+                .result(authenticationService.verifyRegister(request.getEmail(), request.getOtpCode()))
+                .build();
+    }
 
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@RequestBody @Valid LoginRequest request) {

@@ -72,8 +72,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.USER_EXISTED); // Or EMAIL_EXISTED if added to ErrorCode
         }
 
-        // We don't save the user yet, just send OTP
-        // Or we could save them as inactive. Let's save as inactive.
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -118,7 +116,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         if (!user.isActive()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED); // Or USER_NOT_ACTIVE
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         return buildAuthResponse(user);
