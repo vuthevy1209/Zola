@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { cartService, CartItem } from '@/services/cart.service';
+import { getProductPrimaryImage } from '@/services/product.service';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function CartScreen() {
@@ -67,14 +68,14 @@ export default function CartScreen() {
 
     // Calculate totals
     const selectedCartItems = cartItems.filter(item => selectedItems[item.product.id]);
-    const totalPrice = selectedCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const totalPrice = selectedCartItems.reduce((sum, item) => sum + (item.product.basePrice * item.quantity), 0);
     const formatVND = (price: number) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
     };
 
     const renderItem = ({ item }: { item: CartItem }) => (
         <View style={styles.cardContainer}>
-            <Image source={{ uri: item.product.image }} style={styles.itemImage} resizeMode="cover" />
+            <Image source={{ uri: getProductPrimaryImage(item.product) }} style={styles.itemImage} resizeMode="cover" />
             <View style={styles.itemInfo}>
                 <View style={styles.titleRow}>
                     <Text numberOfLines={1} style={styles.itemName}>{item.product.name}</Text>
@@ -89,7 +90,7 @@ export default function CartScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.itemPrice}>{formatVND(item.product.price)}</Text>
+                <Text style={styles.itemPrice}>{formatVND(item.product.basePrice)}</Text>
 
                 <View style={styles.bottomRow}>
                     <Text style={styles.variantText}>Size: L | Màu: Mặc định</Text>
@@ -111,7 +112,7 @@ export default function CartScreen() {
         return (
             <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/')} style={styles.backBtn}>
+                    <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/product')} style={styles.backBtn}>
                         <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
@@ -165,7 +166,7 @@ export default function CartScreen() {
 
                     <TouchableOpacity
                         style={[styles.checkoutButton, { backgroundColor: theme.colors.primary }, selectedCartItems.length === 0 && { opacity: 0.5 }]}
-                        onPress={() => router.push('/checkout')}
+                        onPress={() => router.push('/cart/checkout')}
                         disabled={selectedCartItems.length === 0}
                     >
                         <Text style={styles.checkoutText}>Thanh toán ngay ({selectedCartItems.length})</Text>

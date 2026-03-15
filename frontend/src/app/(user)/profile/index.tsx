@@ -45,7 +45,7 @@ export default function ProfileScreen() {
                         icon="cog-outline"
                         size={24}
                         iconColor="#1D1D1D"
-                        onPress={() => router.push('/profile-settings')}
+                        onPress={() => router.push('/profile/settings')}
                         style={styles.editIconBtn}
                     />
                 </View>
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
                         titleStyle={styles.listItemTitle}
                         left={(props) => <MaterialCommunityIcons name="map-marker-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}
                         right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" style={styles.listChevron} />}
-                        onPress={() => router.push('/addresses')}
+                        onPress={() => router.push('/profile/address')}
                         style={styles.listItem}
                     />
                     <Divider style={styles.divider} />
@@ -67,7 +67,7 @@ export default function ProfileScreen() {
                         titleStyle={styles.listItemTitle}
                         left={(props) => <MaterialCommunityIcons name="heart-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}
                         right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" style={styles.listChevron} />}
-                        onPress={() => router.push('/favorites')}
+                        onPress={() => router.push('/profile/favorites')}
                         style={styles.listItem}
                     />
                     <Divider style={styles.divider} />
@@ -77,7 +77,7 @@ export default function ProfileScreen() {
                         titleStyle={styles.listItemTitle}
                         left={(props) => <MaterialCommunityIcons name="key-outline" size={24} color="#1D1D1D" style={styles.listIcon} />}
                         right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" style={styles.listChevron} />}
-                        onPress={() => router.push('/change-password')}
+                        onPress={() => router.push('/profile/change-password')}
                         style={styles.listItem}
                     />
                     <Divider style={styles.divider} />

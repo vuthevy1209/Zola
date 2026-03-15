@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { useTheme, Text } from 'react-native-paper';
-import { CategoryManager } from '../../../components/admin/attributes/category-manager';
-import { SizeManager } from '../../../components/admin/attributes/size-manager';
-import { ColorManager } from '../../../components/admin/attributes/color-manager';
+import { CategoryManager } from '@/components/admin/attributes/category-manager';
+import { SizeManager } from '@/components/admin/attributes/size-manager';
+import { ColorManager } from '@/components/admin/attributes/color-manager';
 
 const renderScene = SceneMap({
     category: CategoryManager,

@@ -68,7 +68,7 @@ export default function OrdersScreen() {
         return (
             <TouchableOpacity
                 style={styles.orderCard}
-                onPress={() => router.push(`/order/${item.id}`)}
+                onPress={() => router.push(`/orders/${item.id}`)}
                 activeOpacity={0.8}
             >
                 <View style={styles.cardHeader}>
@@ -98,7 +98,7 @@ export default function OrdersScreen() {
                     </Text>
                     <TouchableOpacity
                         style={styles.detailsBtn}
-                        onPress={() => router.push(`/order/${item.id}`)}
+                        onPress={() => router.push(`/orders/${item.id}`)}
                     >
                         <Text style={styles.detailsBtnText}>Details</Text>
                     </TouchableOpacity>
@@ -111,7 +111,7 @@ export default function OrdersScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: '#FAFAFA' }]} edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/')} style={styles.backBtn}>
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.push('/product')} style={styles.backBtn}>
                     <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Đơn hàng của bạn</Text>

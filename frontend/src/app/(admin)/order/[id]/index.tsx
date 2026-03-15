@@ -120,11 +120,11 @@ export default function AdminOrderDetail() {
                             key={idx}
                             style={[styles.itemRow, idx === order.items.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}
                         >
-                            <Image source={{ uri: item.product.image }} style={styles.itemImage} resizeMode="cover" />
+                            <Image source={{ uri: item.product.images?.[0]?.imageUrl }} style={styles.itemImage} resizeMode="cover" />
                             <View style={styles.itemContent}>
                                 <Text numberOfLines={2} style={styles.itemName}>{item.product.name}</Text>
                                 <View style={styles.itemSubRow}>
-                                    <Text style={styles.itemPrice}>{formatPrice(item.product.price)}</Text>
+                                    <Text style={styles.itemPrice}>{formatPrice(item.product.basePrice)}</Text>
                                     <Text style={styles.itemQty}>x{item.quantity}</Text>
                                 </View>
                             </View>

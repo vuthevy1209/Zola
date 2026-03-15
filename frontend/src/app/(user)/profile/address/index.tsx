@@ -91,7 +91,7 @@ export default function AddressesScreen() {
                     refreshing={refreshing}
                     onRefresh={() => { setRefreshing(true); fetchAddresses(false); }}
                     onSetDefault={handleSetDefault}
-                    onEdit={(id) => router.push({ pathname: '/address-form', params: { addressId: id } })}
+                    onEdit={(id) => router.push({ pathname: '/profile/address/form', params: { addressId: id } })}
                     onDelete={handleDelete}
                 />
             )}
@@ -100,7 +100,7 @@ export default function AddressesScreen() {
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.addBtn, { backgroundColor: theme.colors.primary }]}
-                    onPress={() => router.push('/address-form')}
+                    onPress={() => router.push('/profile/address/form')}
                     activeOpacity={0.85}
                 >
                     <MaterialCommunityIcons name="plus" size={20} color="#fff" style={{ marginRight: 8 }} />

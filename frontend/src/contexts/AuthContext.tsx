@@ -41,13 +41,13 @@ function useProtectedRoute(user: UserProfile | null, isLoading: boolean) {
             router.replace('/(auth)/login');
         } else if (user && inAuthGroup) {
             // Vừa đăng nhập → route theo role
-            router.replace(isAdmin ? '/(admin)/(tabs)' : '/(user)/(tabs)');
+            router.replace(isAdmin ? '/(admin)' : '/(user)');
         } else if (user && isAdmin && !inAdminGroup) {
             // Admin cố truy cập màn hình user → về admin
-            router.replace('/(admin)/(tabs)');
+            router.replace('/(admin)');
         } else if (user && !isAdmin && inAdminGroup) {
             // User cố truy cập màn hình admin → về user
-            router.replace('/(user)/(tabs)');
+            router.replace('/(user)');
         }
     }, [user, segments, isLoading]);
 }

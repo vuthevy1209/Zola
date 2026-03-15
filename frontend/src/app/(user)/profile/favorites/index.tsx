@@ -17,10 +17,17 @@ export default function FavoritesScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
-      loadInitialData();
-    }, [])
+      if (products.length === 0) {
+        loadInitialData();
+      } else {
+        // Silent refresh when focusing back
+        refreshData();
+      }
+    }, [products.length])
   );
 
   const loadInitialData = async () => {
@@ -34,6 +41,20 @@ export default function FavoritesScreen() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await favoriteService.getFavorites(0);
+      setProducts(res.content);
+      setHasMore(!res.last);
+      setPage(0);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -72,12 +93,12 @@ export default function FavoritesScreen() {
         />
         <Text variant="headlineSmall" style={styles.headerTitle}>Sản phẩm yêu thích</Text>
       </View>
-      
+
       <FavoriteList
         products={products}
         loadingMore={loadingMore}
         onLoadMore={loadMoreProducts}
-        onItemPress={(p) => router.push(`/product/${p.id}`)}
+        onItemPress={(p) => router.push(`/profile/favorites/${p.id}`)}
       />
     </SafeAreaView>
   );

@@ -36,7 +36,7 @@ export default function CheckoutScreen() {
         }
     };
 
-    const totalItemPrice = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const totalItemPrice = cartItems.reduce((sum, item) => sum + (item.product.basePrice * item.quantity), 0);
     const finalTotal = Math.max(0, totalItemPrice - (appliedVoucher?.discount || 0));
 
     const handleApplyVoucher = async () => {
@@ -68,7 +68,7 @@ export default function CheckoutScreen() {
                 'Thành công',
                 'Đặt hàng thành công! Trạng thái đơn hàng đang chờ xác nhận.',
                 [
-                    { text: 'Xem đơn hàng', onPress: () => router.replace(`/order/${order.id}`) },
+                    { text: 'Xem đơn hàng', onPress: () => router.replace(`/orders/${order.id}`) },
                     { text: 'Trang chủ', onPress: () => router.replace('/') }
                 ]
             );
@@ -120,7 +120,7 @@ export default function CheckoutScreen() {
                     {cartItems.map((item) => (
                         <View key={item.product.id} style={styles.orderRow}>
                             <Text numberOfLines={1} style={styles.orderItemName}>{item.quantity}x {item.product.name}</Text>
-                            <Text style={styles.orderItemPrice}>{formatPrice(item.product.price * item.quantity)}</Text>
+                            <Text style={styles.orderItemPrice}>{formatPrice(item.product.basePrice * item.quantity)}</Text>
                         </View>
                     ))}
 

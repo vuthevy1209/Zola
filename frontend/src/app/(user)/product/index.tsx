@@ -99,7 +99,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.searchBar}
-        onPress={() => router.push('/search')}
+        onPress={() => router.push('/product/search')}
         activeOpacity={0.8}
       >
         <IconButton icon="magnify" size={20} iconColor="#666" style={{ margin: 0, marginRight: 4 }} />
@@ -113,7 +113,7 @@ export default function HomeScreen() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
         {categories.map((cat) => (
-          <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => router.push({ pathname: '/(user)/(shop)/category/[id]', params: { id: cat.id, name: cat.name } })}>
+          <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => router.push({ pathname: '/product/category/[id]', params: { id: cat.id, name: cat.name } })}>
             <View style={styles.categoryIconWrap}>
               <Image source={{ uri: cat?.imageUrl }} style={styles.categoryImage} resizeMode="cover" />
             </View>
