@@ -65,10 +65,6 @@ export default function HomeScreen() {
     }
   };
 
-  const renderProductItem = ({ item }: { item: Product }) => (
-    <ProductCard product={item} />
-  );
-
   const renderHeader = () => (
     <View>
       {/* User Greeting */}
@@ -108,7 +104,9 @@ export default function HomeScreen() {
         data={products}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        renderItem={renderProductItem}
+        renderItem={({ item }: { item: Product }) => (
+          <ProductCard product={item} />
+        )}
         ListHeaderComponent={renderHeader()}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.row}

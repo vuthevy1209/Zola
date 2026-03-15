@@ -10,7 +10,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { RealmProvider } from '@/storage/realm';
-
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export const unstable_settings = {
     anchor: '(user)',
@@ -98,15 +98,17 @@ export default function RootLayout() {
     };
 
     return (
-        <ThemeProvider value={colorScheme === 'dark' ? MyDarkTheme : MyLightTheme}>
-            <PaperProvider theme={customPaperTheme}>
-                <RealmProvider>
-                    <AuthProvider>
-                        <AppContent />
-                    </AuthProvider>
-                </RealmProvider>
-            </PaperProvider>
-            <StatusBar style="auto" />
-        </ThemeProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ThemeProvider value={colorScheme === 'dark' ? MyDarkTheme : MyLightTheme}>
+                <PaperProvider theme={customPaperTheme}>
+                    <RealmProvider>
+                        <AuthProvider>
+                            <AppContent />
+                        </AuthProvider>
+                    </RealmProvider>
+                </PaperProvider>
+                <StatusBar style="auto" />
+            </ThemeProvider>
+        </GestureHandlerRootView>
     );
 }

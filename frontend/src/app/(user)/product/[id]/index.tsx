@@ -22,6 +22,9 @@ import {
 import { cartService } from "@/services/cart.service";
 import { favoriteService, Review } from '@/services/favorite.service';
 import { formatPrice } from "@/utils/format";
+import ProductSelectionModal from "@/components/products/product-selection-modal";
+import StatusModal, { StatusType } from "@/components/ui/status-modal";
+import { ProductVariant as ServiceProductVariant } from "@/services/product.service";
 
 const { width } = Dimensions.get("window");
 const CONTENT_SHEET_OVERLAP = 40;
@@ -40,6 +43,13 @@ export default function ProductDetailScreen() {
     const [isDescExpanded, setIsDescExpanded] = useState(true);
     const [isReviewsExpanded, setIsReviewsExpanded] = useState(true);
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+    const [selectionModalVisible, setSelectionModalVisible] = useState(false);
+    
+    // Status Modal State
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusType, setStatusType] = useState<StatusType>('success');
+    const [statusTitle, setStatusTitle] = useState("");
+    const [statusMessage, setStatusMessage] = useState("");
 
     useEffect(() => {
         if (id) loadProduct();
@@ -121,17 +131,28 @@ export default function ProductDetailScreen() {
         setIsFavorite(newStatus);
     };
 
-    const handleAddToCart = async () => {
-        if (!product) return;
+    const handleAddToCart = () => {
+        setSelectionModalVisible(true);
+    };
+
+    const handleConfirmSelection = async (variant: ServiceProductVariant, quantity: number) => {
+        setSelectionModalVisible(false);
         setAddingToCart(true);
         try {
-            await cartService.addToCart(product, 1);
-            alert("Đã thêm sản phẩm vào giỏ hàng");
+            await cartService.addToCart(product!.id, variant.id, quantity);
+            showStatus('success', 'Thành công!', 'Sản phẩm đã được thêm vào giỏ hàng của bạn.');
         } catch {
-            alert("Lỗi thêm giỏ hàng");
+            showStatus('error', 'Thất bại!', 'Đã có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
         } finally {
             setAddingToCart(false);
         }
+    };
+
+    const showStatus = (type: StatusType, title: string, message: string) => {
+        setStatusType(type);
+        setStatusTitle(title);
+        setStatusMessage(message);
+        setStatusModalVisible(true);
     };
 
 
@@ -243,20 +264,25 @@ export default function ProductDetailScreen() {
                             <View style={styles.specColumn}>
                                 <Text style={styles.specTitle}>Màu sắc</Text>
                                 <View style={styles.optionsRow}>
-                                    {availableColors.map((color) => (
-                                        <TouchableOpacity
-                                            key={color.id}
-                                            onPress={() => {
-                                                setSelectedColorId(color.id);
-                                                setSelectedSizeId(null);
-                                            }}
-                                            style={[
-                                                styles.colorCircle,
-                                                { backgroundColor: color.hexCode },
-                                                selectedColorId === color.id && styles.colorSelected,
-                                            ]}
-                                        />
-                                    ))}
+                                    {availableColors.map((color) => {
+                                        const isSelected = selectedColorId === color.id;
+                                        const isWhite = color.hexCode.toUpperCase() === '#FFFFFF' || color.hexCode.toUpperCase() === '#FAFAFA' || color.hexCode.toLowerCase() === 'white';
+                                        return (
+                                            <TouchableOpacity
+                                                key={color.id}
+                                                onPress={() => {
+                                                    setSelectedColorId(color.id);
+                                                    setSelectedSizeId(null);
+                                                }}
+                                                style={[
+                                                    styles.colorCircle,
+                                                    { backgroundColor: color.hexCode },
+                                                    isWhite && styles.whiteColorCircle,
+                                                    isSelected && styles.colorCircleSelected,
+                                                ]}
+                                            />
+                                        );
+                                    })}
                                 </View>
                             </View>
                         )}
@@ -368,12 +394,11 @@ export default function ProductDetailScreen() {
                 </View>
             </ScrollView>
 
-            {/* Bottom Action Bar */}
             <View style={styles.bottomBar}>
                 <Button
                     mode="contained"
-                    style={styles.addToCartBtn}
-                    buttonColor="#333333"
+                    style={[styles.addToCartBtn, (addingToCart || (selectedVariant !== undefined && selectedVariant.stockQuantity === 0)) && { opacity: 0.6 }]}
+                    buttonColor="#528F72"
                     onPress={handleAddToCart}
                     loading={addingToCart}
                     disabled={
@@ -387,6 +412,23 @@ export default function ProductDetailScreen() {
                     Thêm vào giỏ
                 </Button>
             </View>
+
+            {product && (
+                <ProductSelectionModal
+                    visible={selectionModalVisible}
+                    product={product}
+                    onClose={() => setSelectionModalVisible(false)}
+                    onConfirm={handleConfirmSelection}
+                />
+            )}
+
+            <StatusModal 
+                visible={statusModalVisible}
+                type={statusType}
+                title={statusTitle}
+                message={statusMessage}
+                onClose={() => setStatusModalVisible(false)}
+            />
         </View>
     );
 }
@@ -480,15 +522,21 @@ const styles = StyleSheet.create({
         gap: 12,
         flexWrap: "wrap",
     },
-    colorCircle: { width: 28, height: 28, borderRadius: 14 },
-    colorSelected: {
-        borderWidth: 2,
-        borderColor: "#FFFFFF",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+    colorCircle: { 
+        width: 32, 
+        height: 32, 
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'transparent',
+    },
+    whiteColorCircle: {
+        borderColor: '#E0E0E0',
+        borderStyle: 'dashed',
+    },
+    colorCircleSelected: {
+        borderColor: '#528F72',
+        borderWidth: 2.5,
+        borderStyle: 'solid',
     },
     sizeCircle: {
         width: 36,
