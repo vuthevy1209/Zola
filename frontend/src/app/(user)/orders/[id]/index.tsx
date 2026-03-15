@@ -5,6 +5,8 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { orderService, Order } from '@/services/order.service';
+import { formatPrice } from '@/utils/format';
+import { getProductPrimaryImage } from '@/services/product.service';
 
 const getStatusLabel = (status: string) => {
     switch (status) {
@@ -70,9 +72,6 @@ export default function OrderDetailScreen() {
         );
     };
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
 
     const canCancel = () => {
         if (!order) return false;
@@ -127,12 +126,12 @@ export default function OrderDetailScreen() {
                     <Text style={styles.sectionTitle}>Sản phẩm đã đặt</Text>
                     {order.items.map((item, idx) => (
                         <View key={idx} style={[styles.itemRow, idx === order.items.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
-                            <Image source={{ uri: item.product.image }} style={styles.itemImage} resizeMode="cover" />
+                            <Image source={{ uri: getProductPrimaryImage(item.product) }} style={styles.itemImage} resizeMode="cover" />
                             <View style={styles.itemContent}>
                                 <Text numberOfLines={2} style={styles.itemName}>{item.product.name}</Text>
                                 <Text style={styles.itemVariant}>Phân loại: Mặc định</Text>
                                 <View style={styles.itemSubRow}>
-                                    <Text style={styles.itemPrice}>{formatPrice(item.product.price)}</Text>
+                                    <Text style={styles.itemPrice}>{formatPrice(item.product.basePrice)}</Text>
                                     <Text style={styles.itemQuantity}>x{item.quantity}</Text>
                                 </View>
                             </View>

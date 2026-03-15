@@ -4,6 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { adminOrderService, AdminOrder, AdminOrderStatus } from '@/services/admin.service';
+import { formatPrice } from '@/utils/format';
 
 const STATUS_LABEL: Record<AdminOrderStatus, string> = {
     NEW: 'Mới', CONFIRMED: 'Xác nhận', PREPARING: 'Chuẩn bị',
@@ -25,8 +26,6 @@ const FILTER_TABS: { value: AdminOrderStatus | 'ALL'; label: string }[] = [
     { value: 'CANCELLED', label: 'Hủy' },
 ];
 
-const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 function OrderCard({ order, onPress }: { order: AdminOrder; onPress: () => void }) {
     const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);

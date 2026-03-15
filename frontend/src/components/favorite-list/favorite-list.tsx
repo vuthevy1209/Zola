@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { Product } from '@/services/product.service';
-import { FavoriteItem } from './favorite-item';
+import { ProductCard } from '../products/product-card';
 
 interface FavoriteListProps {
     products: Product[];
@@ -23,8 +23,8 @@ export const FavoriteList: React.FC<FavoriteListProps> = ({
             keyExtractor={(item) => item.id}
             numColumns={2}
             renderItem={({ item }) => (
-                <FavoriteItem 
-                    item={item} 
+                <ProductCard
+                    product={item} 
                     onPress={() => onItemPress(item)} 
                 />
             )}

@@ -5,6 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { adminOrderService, AdminOrder, AdminOrderStatus } from '@/services/admin.service';
+import { formatPrice } from '@/utils/format';
 
 const STATUS_FLOW: AdminOrderStatus[] = ['NEW', 'CONFIRMED', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
 
@@ -18,8 +19,6 @@ const STATUS_COLOR: Record<AdminOrderStatus, string> = {
     DELIVERING: '#06B6D4', DELIVERED: '#388E3C', CANCELLED: '#D32F2F',
 };
 
-const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 export default function AdminOrderDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();

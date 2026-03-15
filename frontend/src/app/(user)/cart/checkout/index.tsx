@@ -5,6 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import { cartService, CartItem } from '@/services/cart.service';
 import { orderService } from '@/services/order.service';
 import { promotionService, Voucher } from '@/services/promotion.service';
+import { formatPrice } from '@/utils/format';
 
 export default function CheckoutScreen() {
     const theme = useTheme();
@@ -79,9 +80,6 @@ export default function CheckoutScreen() {
         }
     };
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
 
     if (loading) {
         return (

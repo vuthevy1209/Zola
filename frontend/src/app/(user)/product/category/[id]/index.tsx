@@ -16,6 +16,10 @@ import {
     Product,
     productService,
 } from '@/services/product.service';
+import { ProductCard } from '@/components/products/product-card';
+import { formatPrice } from '@/utils/format';
+import { CategoryHeader } from '@/components/category/category-header';
+import { CategoryFilter } from '@/components/category/category-filter';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width / 2 - 16;
@@ -77,71 +81,23 @@ export default function CategoryScreen() {
         loadPage(page + 1);
     };
 
-    const formatPrice = (price: number) =>
-        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-
     const renderProduct = ({ item }: { item: Product }) => (
-        <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => router.push(`/product/${item.id}`)}
-        >
-            <Image
-                source={{ uri: getProductPrimaryImage(item) }}
-                style={styles.cardImage}
-                resizeMode="cover"
-            />
-            <View style={styles.cardBody}>
-                <Text numberOfLines={2} style={styles.cardName}>{item.name}</Text>
-                <View style={styles.priceContainer}>
-                    <Text style={styles.cardPrice}>{formatPrice(item.basePrice)}</Text>
-                </View>
-                <Text numberOfLines={1} style={styles.statsText}>{item.brand}</Text>
-            </View>
-        </TouchableOpacity>
+        <ProductCard product={item} />
     );
 
     const renderHeader = () => (
-        <View>
-            {/* Category filter chips */}
-            {categories.length > 0 && (
-                <FlatList
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    data={categories}
-                    keyExtractor={item => String(item.id)}
-                    contentContainerStyle={styles.filterList}
-                    renderItem={({ item }) => {
-                        const isActive = item.id === selectedCategoryId;
-                        return (
-                            <TouchableOpacity
-                                style={[styles.chip, isActive && styles.chipActive]}
-                                onPress={() => setSelectedCategoryId(item.id)}
-                                activeOpacity={0.8}
-                            >
-                                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                                    {item.name}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    }}
-                />
-            )}
-        </View>
+        <CategoryFilter
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+        />
     );
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-                    <IconButton icon="chevron-left" size={24} iconColor="#1E1E1E" style={{ margin: 0 }} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{currentCategoryName}</Text>
-                <View style={{ width: 44 }} />
-            </View>
+            <CategoryHeader title={currentCategoryName} />
 
             {loading ? (
                 <View style={styles.center}>
@@ -173,27 +129,6 @@ export default function CategoryScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFFFFF' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-    },
-    backBtn: {
-        width: 44,
-        height: 44,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        flex: 1,
-        textAlign: 'center',
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1E1E1E',
-    },
     resultRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -204,63 +139,11 @@ const styles = StyleSheet.create({
     },
     foundLabel: { fontSize: 14, color: '#999999' },
     foundCount: { fontSize: 22, fontWeight: '700', color: '#1E1E1E', marginTop: 2 },
-    filterList: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, gap: 8 },
-    chip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        backgroundColor: '#F5F5F5',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-    chipActive: {
-        backgroundColor: '#1E1E1E',
-        borderColor: '#1E1E1E',
-    },
-    chipText: { fontSize: 13, color: '#555555', fontWeight: '500' },
-    chipTextActive: { color: '#FFFFFF' },
     listContent: { paddingBottom: 24 },
     row: {
         paddingHorizontal: 12,
         justifyContent: 'space-between',
         marginBottom: 12
-    },
-    card: {
-        width: CARD_WIDTH,
-        backgroundColor: 'white',
-        borderRadius: 20,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
-    },
-    cardImage: {
-        width: '100%',
-        height: CARD_WIDTH,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        backgroundColor: '#F5F5F5',
-    },
-    cardBody: { padding: 12 },
-    cardName: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#222',
-        lineHeight: 20,
-        height: 40, // 2 lines
-        marginBottom: 8,
-    },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    cardPrice: { fontSize: 16, fontWeight: '700', color: '#222' },
-    statsText: {
-        fontSize: 12,
-        color: '#888',
     },
     emptyText: { textAlign: 'center', marginTop: 60, opacity: 0.5, fontSize: 15 },
 });

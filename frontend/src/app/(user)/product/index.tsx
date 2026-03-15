@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, useTheme, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { productService, Category, Product, getProductPrimaryImage } from '@/services/product.service';
-
-
-const { width } = Dimensions.get('window');
-const COLUMN_WIDTH = width / 2 - 16;
+import { productService, Category, Product } from '@/services/product.service';
+import { ProductCard } from '@/components/products/product-card';
+import { ProductSearchBar } from '@/components/products/product-search-bar';
+import { CategoryList } from '@/components/products/category-list';
+import { HotProductList } from '@/components/products/hot-product-list';
+import { formatPrice } from '@/utils/format';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -64,25 +65,8 @@ export default function HomeScreen() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-  };
-
   const renderProductItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => router.push(`/product/${item.id}`)}
-      activeOpacity={0.8}
-    >
-      <Image source={{ uri: getProductPrimaryImage(item) }} style={styles.productImage} resizeMode="cover" />
-      <View style={styles.productContent}>
-        <Text numberOfLines={2} style={styles.productName}>{item.name}</Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>{formatPrice(item.basePrice)}</Text>
-        </View>
-        <Text numberOfLines={1} style={styles.statsText}>{item.brand}</Text>
-      </View>
-    </TouchableOpacity>
+    <ProductCard product={item} />
   );
 
   const renderHeader = () => (
@@ -97,50 +81,11 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.searchBar}
-        onPress={() => router.push('/product/search')}
-        activeOpacity={0.8}
-      >
-        <IconButton icon="magnify" size={20} iconColor="#666" style={{ margin: 0, marginRight: 4 }} />
-        <Text style={{ color: '#888', fontSize: 15 }}>Tìm kiếm sản phẩm...</Text>
-      </TouchableOpacity>
+      <ProductSearchBar />
 
+      <CategoryList categories={categories} />
 
-      {/* Categories */}
-      <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>Danh mục</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-        {categories.map((cat) => (
-          <TouchableOpacity key={cat.id} style={styles.categoryItem} onPress={() => router.push({ pathname: '/product/category/[id]', params: { id: cat.id, name: cat.name } })}>
-            <View style={styles.categoryIconWrap}>
-              <Image source={{ uri: cat?.imageUrl }} style={styles.categoryImage} resizeMode="cover" />
-            </View>
-            <Text variant="bodySmall" style={styles.categoryName}>{cat.name}</Text>
-          </TouchableOpacity>
-        ))}
-        <View style={{ width: 16 }} />
-      </ScrollView>
-
-      {/* Hot Products */}
-      <View style={styles.sectionHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>Sản phẩm nổi bật</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.hotProductsContainer}>
-        {hotProducts.map((prod) => (
-          <TouchableOpacity
-            key={prod.id}
-            style={styles.hotProductCard}
-            onPress={() => router.push(`/product/${prod.id}`)}
-          >
-            <Image source={{ uri: getProductPrimaryImage(prod) }} style={styles.hotProductImage} />
-            <Text numberOfLines={1} style={styles.hotProductName}>{prod.name}</Text>
-            <Text style={{ color: theme.colors.error, fontWeight: 'bold' }}>{formatPrice(prod.basePrice)}</Text>
-          </TouchableOpacity>
-        ))}
-        <View style={{ width: 16 }} />
-      </ScrollView>
+      <HotProductList hotProducts={hotProducts} />
 
       {/* All Products Grid Header */}
       <View style={[styles.sectionHeader, { marginTop: 16 }]}>
@@ -186,24 +131,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 20,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
   sectionHeader: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -214,46 +141,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: 'bold',
   },
-  categoriesContainer: {
-    paddingLeft: 16,
-    marginBottom: 16,
-  },
-  categoryItem: {
-    alignItems: 'center',
-    marginRight: 16,
-    width: 70,
-  },
-  categoryIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  categoryImage: {
-    width: 60,
-    height: 60,
-  },
-  categoryName: {
-    textAlign: 'center',
-  },
-  hotProductsContainer: {
-    paddingLeft: 16,
-  },
-  hotProductCard: {
-    width: 140,
-    marginRight: 16,
-  },
-  hotProductImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  hotProductName: {
-    fontSize: 13,
-    marginBottom: 4,
-  },
   listContent: {
     paddingBottom: 24,
   },
@@ -262,64 +149,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  productCard: {
-    width: COLUMN_WIDTH,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  productImage: {
-    width: '100%',
-    height: COLUMN_WIDTH,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    backgroundColor: '#F5F5F5',
-  },
-  productContent: {
-    padding: 12,
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#222',
-    lineHeight: 20,
-    height: 40, // 2 lines
-    marginBottom: 8,
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  priceText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#222', // Match cart dark sleek text, error color removed
-  },
-  discountBadge: {
-    backgroundColor: '#ffebee',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  discountText: {
-    color: '#d32f2f',
-    fontSize: 10,
-    fontWeight: 'bold'
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statsText: {
-    fontSize: 12,
-    color: '#888',
-  }
 });

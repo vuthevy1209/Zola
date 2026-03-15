@@ -6,6 +6,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { cartService, CartItem } from '@/services/cart.service';
 import { getProductPrimaryImage } from '@/services/product.service';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { formatPrice } from '@/utils/format';
 
 export default function CartScreen() {
     const theme = useTheme();
@@ -69,9 +70,6 @@ export default function CartScreen() {
     // Calculate totals
     const selectedCartItems = cartItems.filter(item => selectedItems[item.product.id]);
     const totalPrice = selectedCartItems.reduce((sum, item) => sum + (item.product.basePrice * item.quantity), 0);
-    const formatVND = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
 
     const renderItem = ({ item }: { item: CartItem }) => (
         <View style={styles.cardContainer}>
@@ -90,7 +88,7 @@ export default function CartScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.itemPrice}>{formatVND(item.product.basePrice)}</Text>
+                <Text style={styles.itemPrice}>{formatPrice(item.product.basePrice)}</Text>
 
                 <View style={styles.bottomRow}>
                     <Text style={styles.variantText}>Size: L | Màu: Mặc định</Text>
@@ -152,7 +150,7 @@ export default function CartScreen() {
                 <View style={styles.bottomContainer}>
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Tiền hàng</Text>
-                        <Text style={styles.summaryValue}>{formatVND(totalPrice)}</Text>
+                        <Text style={styles.summaryValue}>{formatPrice(totalPrice)}</Text>
                     </View>
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
@@ -161,7 +159,7 @@ export default function CartScreen() {
                     <View style={styles.divider} />
                     <View style={[styles.summaryRow, { marginBottom: 24 }]}>
                         <Text style={styles.subtotalLabel}>Tổng cộng</Text>
-                        <Text style={styles.subtotalValue}>{formatVND(totalPrice)}</Text>
+                        <Text style={styles.subtotalValue}>{formatPrice(totalPrice)}</Text>
                     </View>
 
                     <TouchableOpacity

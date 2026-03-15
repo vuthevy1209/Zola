@@ -21,6 +21,7 @@ import {
 } from "@/services/product.service";
 import { cartService } from "@/services/cart.service";
 import { favoriteService, Review } from '@/services/favorite.service';
+import { formatPrice } from "@/utils/format";
 
 const { width } = Dimensions.get("window");
 const CONTENT_SHEET_OVERLAP = 40;
@@ -133,11 +134,6 @@ export default function ProductDetailScreen() {
         }
     };
 
-    const formatPrice = (price: number) =>
-        new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-        }).format(price);
 
     const handleBack = () => {
         router.back();

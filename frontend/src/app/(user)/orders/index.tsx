@@ -5,6 +5,7 @@ import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { orderService, Order, OrderStatus } from '@/services/order.service';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { formatPrice } from '@/utils/format';
 
 const TABS = [
     { value: 'PROCESSING', label: 'Đang xử lý', icon: 'clock-outline' },
@@ -58,9 +59,6 @@ export default function OrdersScreen() {
         return o.status === activeTab;
     });
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
 
     const renderOrder = ({ item }: { item: Order }) => {
         const itemCount = item.items.reduce((sum, current) => sum + current.quantity, 0);
