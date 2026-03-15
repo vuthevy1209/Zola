@@ -1,25 +1,26 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar, Text, Button, useTheme, List, Divider, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth.service';
+import ConfirmModal from '@/components/ui/confirm-modal';
 
 export default function ProfileScreen() {
     const { user, signOut } = useAuth();
     const router = useRouter();
 
+    const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
     const handleLogout = () => {
-        Alert.alert(
-            'Đăng xuất',
-            'Bạn có chắc chắn muốn đăng xuất?',
-            [
-                { text: 'Hủy', style: 'cancel' },
-                { text: 'Đăng xuất', onPress: () => signOut() },
-            ]
-        );
+        setLogoutModalVisible(true);
+    };
+
+    const confirmLogout = () => {
+        setLogoutModalVisible(false);
+        signOut();
     };
 
     if (!user) {
@@ -85,13 +86,24 @@ export default function ProfileScreen() {
                     {/* Logout moved inside the card, matched design */}
                     <List.Item
                         title="Đăng xuất"
-                        titleStyle={[styles.listItemTitle, { color: '#1D1D1D' }]}
-                        left={(props) => <MaterialCommunityIcons name="logout-variant" size={24} color="#1D1D1D" style={styles.listIcon} />}
+                        titleStyle={[styles.listItemTitle, { color: '#e41212ff' }]}
+                        left={(props) => <MaterialCommunityIcons name="logout-variant" size={24} color="#f60404ff" style={styles.listIcon} />}
                         onPress={handleLogout}
                         style={[styles.listItem, { borderBottomWidth: 0 }]}
                     />
                 </View>
             </ScrollView>
+
+            <ConfirmModal
+                visible={logoutModalVisible}
+                title="Đăng xuất"
+                message="Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng không?"
+                confirmLabel="Đăng xuất"
+                confirmColor="#FF5252"
+                icon="logout-variant"
+                onConfirm={confirmLogout}
+                onCancel={() => setLogoutModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }
