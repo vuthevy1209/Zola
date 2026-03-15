@@ -37,14 +37,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="favorites"
-        options={{
-          href: null,
-          tabBarStyle: { display: 'none' },
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Tài khoản',

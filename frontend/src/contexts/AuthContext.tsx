@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { UserProfile, AuthResponse } from '../services/auth.service';
+import { AuthResponse } from '../services/auth.service';
 import { useRouter, useSegments } from 'expo-router';
 import { useRealm, useQuery } from '../storage/realm';
 import { UserProfile as RealmUserProfile } from '../storage/realm';
+import { UserProfile } from '@/services/profile.service';
 
 interface AuthContextType {
     user: UserProfile | null;

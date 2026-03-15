@@ -97,11 +97,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         if (!user.isActive()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.USER_NOT_ACTIVE);
         }
 
         return buildAuthResponse(user);

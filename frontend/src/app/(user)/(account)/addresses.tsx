@@ -2,16 +2,15 @@ import React, { useState, useCallback } from 'react';
 import {
     View,
     StyleSheet,
-    ScrollView,
     TouchableOpacity,
     Alert,
-    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { addressService, Address } from '@/services/address.service';
+import { AddressList } from '@/components/address/address-list';
 
 export default function AddressesScreen() {
     const router = useRouter();
@@ -71,11 +70,6 @@ export default function AddressesScreen() {
         );
     };
 
-    const formatAddress = (addr: Address) => {
-        const parts = [addr.streetAddress, addr.ward, addr.district, addr.province].filter(Boolean);
-        return parts.join(', ');
-    };
-
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             {/* Header */}
@@ -92,68 +86,14 @@ export default function AddressesScreen() {
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             ) : (
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={() => { setRefreshing(true); fetchAddresses(false); }}
-                        />
-                    }
-                    showsVerticalScrollIndicator={false}
-                >
-                    {addresses.length === 0 ? (
-                        <View style={styles.emptyContainer}>
-                            <MaterialCommunityIcons name="map-marker-off-outline" size={72} color="#CCCCCC" />
-                            <Text style={styles.emptyText}>Bạn chưa có địa chỉ nào</Text>
-                            <Text style={styles.emptySubText}>Thêm địa chỉ để đặt hàng nhanh hơn</Text>
-                        </View>
-                    ) : (
-                        addresses.map((addr) => (
-                            <View key={addr.id} style={styles.card}>
-                                {/* Left: address info */}
-                                <View style={styles.cardLeft}>
-                                    <View style={styles.addressRow}>
-                                        <MaterialCommunityIcons name="map-marker-outline" size={16} color="#888" style={{ marginRight: 6, marginTop: 2 }} />
-                                        <Text style={styles.addressText}>{formatAddress(addr)}</Text>
-                                    </View>
-                                    {!addr.isDefault && (
-                                        <TouchableOpacity
-                                            style={styles.setDefaultBtn}
-                                            onPress={() => handleSetDefault(addr.id)}
-                                        >
-                                            <MaterialCommunityIcons name="star-outline" size={13} color={theme.colors.primary} />
-                                            <Text style={[styles.setDefaultText, { color: theme.colors.primary }]}>Đặt mặc định</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-
-                                {/* Right: badge + icon actions */}
-                                <View style={styles.cardRight}>
-                                    {addr.isDefault && (
-                                        <View style={styles.defaultBadge}>
-                                            <Text style={styles.defaultBadgeText}>Mặc định</Text>
-                                        </View>
-                                    )}
-                                    <View style={styles.iconActions}>
-                                        <TouchableOpacity
-                                            style={styles.iconBtn}
-                                            onPress={() => router.push({ pathname: '/address-form', params: { addressId: addr.id } })}
-                                        >
-                                            <MaterialCommunityIcons name="pencil-outline" size={19} color="#555" />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.iconBtn}
-                                            onPress={() => handleDelete(addr)}
-                                        >
-                                            <MaterialCommunityIcons name="trash-can-outline" size={19} color="#E53935" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </View>
-                        ))
-                    )}
-                </ScrollView>
+                <AddressList
+                    addresses={addresses}
+                    refreshing={refreshing}
+                    onRefresh={() => { setRefreshing(true); fetchAddresses(false); }}
+                    onSetDefault={handleSetDefault}
+                    onEdit={(id) => router.push({ pathname: '/address-form', params: { addressId: id } })}
+                    onDelete={handleDelete}
+                />
             )}
 
             {/* Add button */}
@@ -201,91 +141,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    scrollContent: {
-        padding: 16,
-        paddingBottom: 24,
-        flexGrow: 1,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 80,
-        gap: 10,
-    },
-    emptyText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#888',
-        marginTop: 12,
-    },
-    emptySubText: {
-        fontSize: 13,
-        color: '#AAAAAA',
-        textAlign: 'center',
-    },
-    card: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    cardLeft: {
-        flex: 1,
-        marginRight: 12,
-    },
-    cardRight: {
-        alignItems: 'flex-end',
-        gap: 10,
-    },
-    defaultBadge: {
-        backgroundColor: '#E8F5E9',
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        marginLeft: 8,
-    },
-    defaultBadgeText: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#2E7D32',
-    },
-    addressRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        flex: 1,
-    },
-    addressText: {
-        fontSize: 13,
-        color: '#666666',
-        flex: 1,
-        lineHeight: 18,
-    },
-    setDefaultBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        marginTop: 8,
-        marginLeft: 22,
-    },
-    setDefaultText: {
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    iconActions: {
-        flexDirection: 'row',
-        gap: 4,
-    },
-    iconBtn: {
-        padding: 6,
     },
     footer: {
         padding: 16,
