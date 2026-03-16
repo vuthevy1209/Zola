@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { formatFullAddress } from '@/utils/format';
 import { Address } from '@/services/address.service';
 
 interface AddressItemProps {
@@ -19,10 +20,6 @@ export const AddressItem: React.FC<AddressItemProps> = ({
 }) => {
     const theme = useTheme();
 
-    const formatAddress = (addr: Address) => {
-        const parts = [addr.streetAddress, addr.ward, addr.district, addr.province].filter(Boolean);
-        return parts.join(', ');
-    };
 
     return (
         <View style={styles.card}>
@@ -35,7 +32,7 @@ export const AddressItem: React.FC<AddressItemProps> = ({
                         color="#888" 
                         style={{ marginRight: 6, marginTop: 2 }} 
                     />
-                    <Text style={styles.addressText}>{formatAddress(address)}</Text>
+                    <Text style={styles.addressText}>{formatFullAddress(address)}</Text>
                 </View>
                 {!address.isDefault && (
                     <TouchableOpacity

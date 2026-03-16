@@ -127,7 +127,10 @@ export default function CartScreen() {
                     <CartBottomSummary
                         totalPrice={totalPrice}
                         selectedCount={selectedCartItems.length}
-                        onCheckout={() => router.push('/cart/checkout')}
+                        onCheckout={() => {
+                            const ids = selectedCartItems.map(i => i.id).join(',');
+                            router.push(`/cart/checkout?ids=${ids}`);
+                        }}
                         primaryColor={theme.colors.primary}
                     />
                 </>

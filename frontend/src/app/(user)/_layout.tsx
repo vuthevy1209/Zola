@@ -39,6 +39,7 @@ export default function TabLayout() {
         options={{
           title: 'Giỏ hàng',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cart" size={24} color={color} />,
+          popToTopOnBlur: true,
         }}
       />
       <Tabs.Screen
@@ -53,6 +54,7 @@ export default function TabLayout() {
         options={{
           title: 'Tài khoản',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={24} color={color} />,
+          popToTopOnBlur: true,
         }}
       />
     </Tabs>

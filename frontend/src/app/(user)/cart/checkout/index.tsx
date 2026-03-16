@@ -1,40 +1,103 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, useTheme, Button, ActivityIndicator, RadioButton, Divider, Appbar, TextInput } from 'react-native-paper';
-import { Stack, useRouter } from 'expo-router';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { useTheme, ActivityIndicator, IconButton, Text } from 'react-native-paper';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { cartService, CartItem } from '@/services/cart.service';
-import { orderService } from '@/services/order.service';
+import { orderService, PaymentMethod } from '@/services/order.service';
 import { promotionService, Voucher } from '@/services/promotion.service';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatFullAddress } from '@/utils/format';
+import { addressService, Address } from '@/services/address.service';
+import { profileService } from '@/services/profile.service';
+import { AddressSelectionModal } from '@/components/address/address-selection-modal';
+import StatusModal, { StatusType } from '@/components/ui/status-modal';
+import ConfirmModal from '@/components/ui/confirm-modal';
+
+// Subcomponents
+import { CheckoutInfo } from '@/components/orders/checkout/checkout-info';
+import { CheckoutItems } from '@/components/orders/checkout/checkout-items';
+import { CheckoutPayment } from '@/components/orders/checkout/checkout-payment';
+import { CheckoutNotes } from '@/components/orders/checkout/checkout-notes';
+import { CheckoutSummary } from '@/components/orders/checkout/checkout-summary';
+import { CheckoutBottomBar } from '@/components/orders/checkout/checkout-bottom-bar';
 
 export default function CheckoutScreen() {
+    const { ids } = useLocalSearchParams<{ ids: string }>();
     const theme = useTheme();
     const router = useRouter();
 
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [address, setAddress] = useState('123 Đường Nguyễn Huệ, Quận 1, TP. HCM');
-    const [paymentMethod, setPaymentMethod] = useState('COD');
+    const [address, setAddress] = useState('');
+    const [phone, setPhone] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
     const [notes, setNotes] = useState('');
+
+    const [addresses, setAddresses] = useState<Address[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+    const [addressModalVisible, setAddressModalVisible] = useState(false);
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState<{ discount: number, voucher: Voucher } | null>(null);
     const [applyingVoucher, setApplyingVoucher] = useState(false);
 
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusConfig, setStatusConfig] = useState<{ type: StatusType, title: string, message: string }>({
+        type: 'success',
+        title: '',
+        message: ''
+    });
+    const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+
     useEffect(() => {
         loadCart();
-    }, []);
+    }, [ids]);
 
     const loadCart = async () => {
         setLoading(true);
-        const items = await cartService.getCart();
-        setCartItems(items);
-        setLoading(false);
+        try {
+            const [allItems, userProfile, userAddresses] = await Promise.all([
+                cartService.getCart(),
+                profileService.getMyProfile(),
+                addressService.getMyAddresses()
+            ]);
+            
+            // Handle Items
+            let displayItems: CartItem[] = [];
+            if (ids) {
+                const idsStr = Array.isArray(ids) ? ids[0] : ids;
+                const selectedIds = idsStr.split(',').filter((id: string) => id.length > 0);
+                displayItems = allItems.filter(item => selectedIds.includes(item.id));
+            }
+            setCartItems(displayItems);
 
-        if (items.length === 0) {
-            router.replace('/cart');
+            if (displayItems.length === 0) {
+                router.replace('/cart');
+                return;
+            }
+
+            // Handle Profile & Addresses
+            setPhone(userProfile.phone || '');
+            setAddresses(userAddresses);
+            
+            const defAddress = userAddresses.find(a => a.isDefault) || userAddresses[0];
+            if (defAddress) {
+                setSelectedAddressId(defAddress.id);
+                setAddress(formatFullAddress(defAddress));
+            }
+        } catch (error) {
+            console.error('Failed to load checkout data', error);
+        } finally {
+            setLoading(false);
         }
+    };
+
+
+    const handleSelectAddress = (addr: Address) => {
+        setSelectedAddressId(addr.id);
+        setAddress(formatFullAddress(addr));
+        setAddressModalVisible(false);
     };
 
     const totalItemPrice = cartItems.reduce((sum, item) => sum + (item.product.basePrice * item.quantity), 0);
@@ -46,9 +109,19 @@ export default function CheckoutScreen() {
         try {
             const result = await promotionService.applyVoucher(voucherCode, totalItemPrice);
             setAppliedVoucher({ discount: result.discountAmount, voucher: result.voucher });
-            Alert.alert('Thành công', 'Áp dụng mã giảm giá thành công');
+            setStatusConfig({
+                type: 'success',
+                title: 'Thành công',
+                message: 'Áp dụng mã giảm giá thành công'
+            });
+            setStatusModalVisible(true);
         } catch (e: any) {
-            Alert.alert('Lỗi', e.message || 'Mã không hợp lệ');
+            setStatusConfig({
+                type: 'error',
+                title: 'Lỗi',
+                message: e.message || 'Mã không hợp lệ'
+            });
+            setStatusModalVisible(true);
             setAppliedVoucher(null);
         } finally {
             setApplyingVoucher(false);
@@ -57,26 +130,65 @@ export default function CheckoutScreen() {
 
     const handleCheckout = async () => {
         if (!address) {
-            Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ giao hàng');
+            setStatusConfig({
+                type: 'error',
+                title: 'Lỗi',
+                message: 'Vui lòng nhập địa chỉ giao hàng'
+            });
+            setStatusModalVisible(true);
+            return;
+        }
+        if (!phone) {
+            setStatusConfig({
+                type: 'error',
+                title: 'Lỗi',
+                message: 'Vui lòng nhập số điện thoại'
+            });
+            setStatusModalVisible(true);
             return;
         }
 
+        setConfirmModalVisible(true);
+    };
+
+    const processCheckout = async () => {
+        setConfirmModalVisible(false);
         setSubmitting(true);
         try {
-            const order = await orderService.createOrder(cartItems, finalTotal);
-            await cartService.clearCart();
-            Alert.alert(
-                'Thành công',
-                'Đặt hàng thành công! Trạng thái đơn hàng đang chờ xác nhận.',
-                [
-                    { text: 'Xem đơn hàng', onPress: () => router.replace(`/orders/${order.id}`) },
-                    { text: 'Trang chủ', onPress: () => router.replace('/') }
-                ]
-            );
-        } catch (error) {
-            Alert.alert('Lỗi', 'Có lỗi xảy ra trong quá trình đặt hàng');
+            const order = await orderService.createOrder({
+                shippingAddress: address,
+                phoneNumber: phone,
+                paymentMethod: paymentMethod,
+                notes: notes,
+                cartItemIds: cartItems.map(i => i.id)
+            });
+            
+            setCreatedOrderId(order.id);
+            setStatusConfig({
+                type: 'success',
+                title: 'Thành công',
+                message: 'Đặt hàng thành công! Trạng thái đơn hàng đang chờ xác nhận.'
+            });
+            setStatusModalVisible(true);
+        } catch (error: any) {
+            setStatusConfig({
+                type: 'error',
+                title: 'Lỗi',
+                message: error.response?.data?.message || 'Có lỗi xảy ra trong quá trình đặt hàng'
+            });
+            setStatusModalVisible(true);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false);
+        if (statusConfig.type === 'success' && createdOrderId) {
+            router.replace({
+                pathname: '/orders',
+                params: { status: 'PENDING' }
+            });
         }
     };
 
@@ -84,124 +196,87 @@ export default function CheckoutScreen() {
     if (loading) {
         return (
             <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" />
+                <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
         );
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <View style={[styles.container, { backgroundColor: '#F8F9FA' }]}>
             <Stack.Screen options={{ headerShown: false }} />
-            <Appbar.Header style={[styles.header, { backgroundColor: theme.colors.surface }]}>
-                <Appbar.BackAction onPress={() => router.back()} />
-                <Appbar.Content title="Thanh toán" titleStyle={styles.headerTitle} />
-            </Appbar.Header>
+            
+            <View style={styles.header}>
+                <IconButton icon="chevron-left" size={28} onPress={() => router.back()} style={styles.backBtn} />
+                <Text style={styles.headerTitle}>Xác nhận đơn hàng</Text>
+                <View style={{ width: 44 }} />
+            </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* Address */}
-                <View style={styles.card}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
-                    <TextInput
-                        mode="outlined"
-                        value={address}
-                        onChangeText={setAddress}
-                        multiline
-                        style={styles.input}
-                        outlineColor="#EAEAEA"
-                        activeOutlineColor={theme.colors.primary}
-                    />
-                </View>
+                <CheckoutInfo
+                    address={address}
+                    phone={phone}
+                    setPhone={setPhone}
+                    onOpenAddressModal={() => setAddressModalVisible(true)}
+                />
 
-                {/* Order Details */}
-                <View style={styles.card}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>Chi tiết đơn hàng</Text>
-                    {cartItems.map((item) => (
-                        <View key={item.product.id} style={styles.orderRow}>
-                            <Text numberOfLines={1} style={styles.orderItemName}>{item.quantity}x {item.product.name}</Text>
-                            <Text style={styles.orderItemPrice}>{formatPrice(item.product.basePrice * item.quantity)}</Text>
-                        </View>
-                    ))}
+                <CheckoutItems
+                    cartItems={cartItems}
+                    voucherCode={voucherCode}
+                    setVoucherCode={setVoucherCode}
+                    handleApplyVoucher={handleApplyVoucher}
+                    applyingVoucher={applyingVoucher}
+                    appliedVoucher={appliedVoucher}
+                />
 
-                    <View style={styles.voucherContainer}>
-                        <TextInput
-                            mode="outlined"
-                            placeholder="Nhập mã ưu đãi (ZOLA100, WELCOME50)"
-                            value={voucherCode}
-                            onChangeText={setVoucherCode}
-                            style={styles.voucherInput}
-                            outlineColor="#EAEAEA"
-                            activeOutlineColor={theme.colors.primary}
-                            autoCapitalize="characters"
-                        />
-                        <Button
-                            mode="contained"
-                            onPress={handleApplyVoucher}
-                            loading={applyingVoucher}
-                            style={styles.applyBtn}
-                            labelStyle={{ fontWeight: 'bold' }}
-                        >
-                            Áp dụng
-                        </Button>
-                    </View>
+                <CheckoutPayment
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                />
 
-                    {appliedVoucher && (
-                        <View style={[styles.summaryRow, { borderTopWidth: 0, paddingBottom: 0 }]}>
-                            <Text style={{ color: theme.colors.primary, fontWeight: '500' }}>Giảm giá ({appliedVoucher.voucher.code}):</Text>
-                            <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>-{formatPrice(appliedVoucher.discount)}</Text>
-                        </View>
-                    )}
+                <CheckoutNotes
+                    notes={notes}
+                    setNotes={setNotes}
+                />
 
-                    <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>Tổng cộng:</Text>
-                        <Text style={styles.summaryTotal}>
-                            {formatPrice(finalTotal)}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Notification / Notes */}
-                <View style={styles.card}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>Lưu ý thêm (không bắt buộc)</Text>
-                    <TextInput
-                        mode="outlined"
-                        placeholder="Ghi chú cho shipper..."
-                        value={notes}
-                        onChangeText={setNotes}
-                        style={styles.input}
-                        outlineColor="#EAEAEA"
-                        activeOutlineColor={theme.colors.primary}
-                    />
-                </View>
-
-                {/* Payment */}
-                <View style={styles.card}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>Phương thức thanh toán</Text>
-                    <RadioButton.Group onValueChange={newValue => setPaymentMethod(newValue)} value={paymentMethod}>
-                        <View style={styles.radioRow}>
-                            <RadioButton value="COD" color={theme.colors.primary} />
-                            <Text style={styles.radioLabel}>Thanh toán khi nhận hàng (COD)</Text>
-                        </View>
-                        <View style={styles.radioRow}>
-                            <RadioButton value="MOMO" disabled />
-                            <Text style={[styles.radioLabel, { opacity: 0.5 }]}>Ví MoMo (Sắp ra mắt)</Text>
-                        </View>
-                    </RadioButton.Group>
-                </View>
-
+                <CheckoutSummary
+                    totalItemPrice={totalItemPrice}
+                    discountAmount={appliedVoucher?.discount || 0}
+                    finalTotal={finalTotal}
+                />
             </ScrollView>
 
-            <View style={[styles.bottomBar, { backgroundColor: theme.colors.surface }]}>
-                <Button
-                    mode="contained"
-                    onPress={handleCheckout}
-                    loading={submitting}
-                    disabled={submitting}
-                    style={styles.checkoutBtn}
-                    labelStyle={styles.checkoutBtnLabel}
-                >
-                    Đặt hàng ({formatPrice(finalTotal)})
-                </Button>
-            </View>
+            <CheckoutBottomBar
+                finalTotal={finalTotal}
+                submitting={submitting}
+                onCheckout={handleCheckout}
+            />
+
+            <AddressSelectionModal
+                visible={addressModalVisible}
+                onClose={() => setAddressModalVisible(false)}
+                onSelect={handleSelectAddress}
+                currentAddressId={selectedAddressId || undefined}
+            />
+
+            <StatusModal
+                visible={statusModalVisible}
+                type={statusConfig.type}
+                title={statusConfig.title}
+                message={statusConfig.message}
+                buttonLabel={(statusConfig.type === 'success' && createdOrderId) ? 'Xem đơn hàng' : 'Đóng'}
+                onClose={handleModalClose}
+            />
+
+            <ConfirmModal
+                visible={confirmModalVisible}
+                title="Xác nhận đặt hàng"
+                message={`Bạn có chắc chắn muốn đặt đơn hàng này với tổng số tiền ${formatPrice(finalTotal)}?`}
+                onConfirm={processCheckout}
+                onCancel={() => setConfirmModalVisible(false)}
+                confirmLabel="ĐẶT HÀNG"
+                cancelLabel="QUAY LẠI"
+                icon="cart-outline"
+            />
         </View>
     );
 }
@@ -211,14 +286,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        elevation: 0,
-        shadowOpacity: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 8,
+        paddingTop: 12,
+        paddingBottom: 12,
+        backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
+    backBtn: {
+        backgroundColor: '#F8F9FA',
+    },
     headerTitle: {
-        fontWeight: 'bold',
         fontSize: 18,
+        fontWeight: 'bold',
+        color: '#222',
     },
     centerContainer: {
         flex: 1,
@@ -227,110 +311,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 16,
-        paddingBottom: 32,
+        paddingBottom: 40,
         gap: 16,
     },
-    card: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    sectionTitle: {
-        fontWeight: 'bold',
-        marginBottom: 16,
-        fontSize: 16,
-        color: '#1E1E1E',
-    },
-    input: {
-        backgroundColor: '#FAFAFA',
-        fontSize: 14,
-    },
-    orderRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 12,
-        alignItems: 'center',
-    },
-    orderItemName: {
-        flex: 1,
-        fontSize: 14,
-        color: '#444',
-        marginRight: 16,
-    },
-    orderItemPrice: {
-        fontWeight: '600',
-        fontSize: 14,
-        color: '#1E1E1E',
-    },
-    voucherContainer: {
-        flexDirection: 'row',
-        marginTop: 12,
-        alignItems: 'center',
-        gap: 8,
-    },
-    voucherInput: {
-        flex: 1,
-        height: 44,
-        backgroundColor: '#FAFAFA',
-        fontSize: 14,
-    },
-    applyBtn: {
-        height: 44,
-        justifyContent: 'center',
-        borderRadius: 8,
-    },
-    summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 16,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderColor: '#F0F0F0',
-    },
-    summaryLabel: {
-        fontSize: 15,
-        color: '#444',
-    },
-    summaryTotal: {
-        color: '#1E1E1E',
-        fontWeight: 'bold',
-        fontSize: 20,
-    },
-    radioRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    radioLabel: {
-        fontSize: 15,
-        color: '#1E1E1E',
-        marginLeft: 4,
-    },
-    bottomBar: {
-        padding: 16,
-        paddingBottom: 32,
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-    },
-    checkoutBtn: {
-        borderRadius: 30,
-        paddingVertical: 4,
-        elevation: 0,
-    },
-    checkoutBtnLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        letterSpacing: 0.5,
-    }
 });

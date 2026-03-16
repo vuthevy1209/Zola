@@ -41,8 +41,8 @@ export default function ConfirmModal({
             <View style={styles.overlay}>
                 <View style={styles.container}>
                     <View style={styles.content}>
-                        <View style={[styles.iconContainer, { backgroundColor: activeConfirmColor + '15' }]}>
-                            <MaterialCommunityIcons name={icon as any} size={32} color={activeConfirmColor} />
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons name={icon as any} size={48} color={activeConfirmColor} />
                         </View>
                         
                         <Text style={styles.title}>{title}</Text>
@@ -94,9 +94,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,

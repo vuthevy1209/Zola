@@ -35,11 +35,11 @@ export default function CartItemCard({
         });
 
         return (
-            <TouchableOpacity 
+            <TouchableOpacity
                 onPress={() => onRemove(item.id)}
                 activeOpacity={0.6}
             >
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.deleteAction,
                         {
@@ -55,73 +55,86 @@ export default function CartItemCard({
     };
 
     return (
-        <Swipeable
-            renderRightActions={renderRightActions}
-            friction={2}
-            rightThreshold={40}
-        >
-            <View style={styles.cardContainer}>
-                <TouchableOpacity onPress={() => onNavigateToProduct(item.product.id)}>
-                    <Image 
-                        source={{ uri: getProductPrimaryImage(item.product) }} 
-                        style={styles.itemImage} 
-                        resizeMode="cover" 
-                    />
-                </TouchableOpacity>
-                <View style={styles.itemInfo}>
-                    <View style={styles.titleRow}>
-                        <Text numberOfLines={1} style={styles.itemName}>{item.product.name}</Text>
-                        <TouchableOpacity
-                            onPress={() => onToggleSelection(item.id)}
-                            style={[
-                                styles.checkbox,
-                                isSelected ? styles.checkboxSelected : styles.checkboxUnselected
-                            ]}
-                        >
-                            {isSelected && <MaterialCommunityIcons name="check" size={16} color="white" />}
-                        </TouchableOpacity>
-                    </View>
-
-                    <Text style={styles.itemPrice}>{formatPrice(item.product.basePrice)}</Text>
-
-                    <View style={styles.bottomRow}>
-                        <Text style={styles.variantText}>
-                            Size: {item.variant.size?.name ?? 'N/A'} | Màu: {item.variant.color?.name ?? 'N/A'}
-                        </Text>
-                        <View style={styles.quantityPill}>
-                            <TouchableOpacity 
-                                onPress={() => onUpdateQuantity(item.id, item.quantity - 1)} 
-                                style={styles.iconBtn}
+        <View style={styles.swipeContainer}>
+            <Swipeable
+                renderRightActions={renderRightActions}
+                friction={2}
+                rightThreshold={40}
+                containerStyle={styles.swipeableInternal}
+            >
+                <View style={styles.cardContainer}>
+                    <TouchableOpacity onPress={() => onNavigateToProduct(item.product.id)}>
+                        <Image
+                            source={{ uri: getProductPrimaryImage(item.product) }}
+                            style={styles.itemImage}
+                            resizeMode="cover"
+                        />
+                    </TouchableOpacity>
+                    <View style={styles.itemInfo}>
+                        <View style={styles.titleRow}>
+                            <Text numberOfLines={1} style={styles.itemName}>{item.product.name}</Text>
+                            <TouchableOpacity
+                                onPress={() => onToggleSelection(item.id)}
+                                style={[
+                                    styles.checkbox,
+                                    isSelected ? styles.checkboxSelected : styles.checkboxUnselected
+                                ]}
+                                activeOpacity={0.7}
                             >
-                                <MaterialCommunityIcons name="minus" size={16} color="#666" />
+                                {isSelected ? (
+                                    <MaterialCommunityIcons name="check" size={14} color="white" />
+                                ) : null}
                             </TouchableOpacity>
-                            <Text style={styles.quantityText}>{item.quantity}</Text>
-                            <TouchableOpacity 
-                                onPress={() => onUpdateQuantity(item.id, item.quantity + 1)} 
-                                style={styles.iconBtn}
-                            >
-                                <MaterialCommunityIcons name="plus" size={16} color="#666" />
-                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.itemPrice}>{formatPrice(item.product.basePrice)}</Text>
+
+                        <View style={styles.bottomRow}>
+                            <Text style={styles.variantText} numberOfLines={1}>
+                                Size: {item.variant.size?.name ?? 'N/A'} | Màu: {item.variant.color?.name ?? 'N/A'}
+                            </Text>
+                            <View style={styles.quantityPill}>
+                                <TouchableOpacity
+                                    onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                                    style={styles.iconBtn}
+                                >
+                                    <MaterialCommunityIcons name="minus" size={16} color="#666" />
+                                </TouchableOpacity>
+                                <Text style={styles.quantityText}>{item.quantity}</Text>
+                                <TouchableOpacity
+                                    onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                                    style={styles.iconBtn}
+                                >
+                                    <MaterialCommunityIcons name="plus" size={16} color="#666" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </View>
-            </View>
-        </Swipeable>
+            </Swipeable>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    swipeContainer: {
+        marginBottom: 16,
+        paddingHorizontal: 2, // Breathing room for shadow
+    },
+    swipeableInternal: {
+        borderRadius: 20,
+    },
     cardContainer: {
         flexDirection: 'row',
         backgroundColor: 'white',
         borderRadius: 20,
         padding: 12,
-        marginBottom: 16,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+        overflow: 'visible',
     },
     itemImage: {
         width: 90,
@@ -148,23 +161,26 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     checkbox: {
-        width: 24,
-        height: 24,
+        width: 22,
+        height: 22,
         borderRadius: 6,
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1.5,
     },
     checkboxSelected: {
-        backgroundColor: '#528F72',
+        backgroundColor: '#16A34A',
+        borderColor: '#16A34A',
     },
     checkboxUnselected: {
-        backgroundColor: '#F0F0F0',
+        backgroundColor: '#FCFCFC',
+        borderColor: '#E0E0E0',
     },
     itemPrice: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#222',
-        marginTop: 4,
+        color: '#16A34A',
+        marginTop: 6,
     },
     bottomRow: {
         flexDirection: 'row',
@@ -175,35 +191,38 @@ const styles = StyleSheet.create({
     variantText: {
         fontSize: 12,
         color: '#888',
+        flex: 1,
+        marginRight: 10,
     },
     quantityPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#EAEAEA',
+        backgroundColor: '#F5F7F9',
         borderRadius: 20,
-        paddingHorizontal: 8,
+        paddingHorizontal: 6,
         paddingVertical: 4,
     },
     iconBtn: {
-        padding: 4,
+        padding: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     quantityText: {
         fontSize: 14,
-        fontWeight: '600',
-        paddingHorizontal: 12,
-        color: '#333',
+        fontWeight: '700',
+        paddingHorizontal: 10,
+        color: '#222',
+        minWidth: 30,
+        textAlign: 'center',
     },
     deleteAction: {
         backgroundColor: '#FF5252',
         justifyContent: 'center',
         alignItems: 'center',
         width: 80,
-        height: '84%', // Match card height minus margin
+        height: '100%',
         borderRadius: 20,
-        marginLeft: 10,
-        // Align with card bottom margin
-        marginBottom: 16,
+        marginLeft: 12,
     },
     deleteText: {
         color: 'white',
