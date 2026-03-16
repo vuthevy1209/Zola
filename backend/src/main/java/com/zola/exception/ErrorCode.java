@@ -27,6 +27,11 @@ public enum ErrorCode {
     ADDRESS_NOT_FOUND("address-not-found", "Address not found", HttpStatus.NOT_FOUND),
     TOO_MANY_REQUESTS("too-many-requests", "Too many failed attempts. Please try again later.", HttpStatus.TOO_MANY_REQUESTS),
     INVALID_TOKEN("invalid-token", "Invalid or expired reset token.", HttpStatus.BAD_REQUEST),
+    CART_ITEM_NOT_FOUND("cart-item-not-found", "Một số sản phẩm không tồn tại trong giỏ hàng", HttpStatus.NOT_FOUND),
+    INVALID_CHECKOUT_REQUEST("invalid-checkout-request", "Danh sách sản phẩm thanh toán không được để trống", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_FOUND("order-not-found", "Đơn hàng không tồn tại", HttpStatus.NOT_FOUND),
+    ORDER_CANNOT_CANCEL("order-cannot-cancel", "Đơn hàng không thể hủy ở trạng thái hiện tại", HttpStatus.BAD_REQUEST),
+    ORDER_CANCEL_TIME_EXCEEDED("order-cancel-time-exceeded", "Đã hết thời gian cho phép hủy đơn hàng (30 phút)", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
