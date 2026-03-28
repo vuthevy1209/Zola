@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("ai")
 @RequiredArgsConstructor
-public class AIController {
+public class AITestMyLogicController {
 
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
@@ -88,6 +88,10 @@ public class AIController {
         // 2. Chia nhỏ document (chunking) để embedding hiệu quả hơn
         TokenTextSplitter splitter = new TokenTextSplitter();
         List<Document> chunks = splitter.apply(documents);
+
+        for (Document chunk : chunks) {
+            System.out.println("Chunk: " + chunk.getText());
+        }
 
         // 3. Lưu vào vector store (tự động embed với RETRIEVAL_DOCUMENT)
         vectorStore.add(chunks);
